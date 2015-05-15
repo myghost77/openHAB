@@ -18,6 +18,8 @@ The following chapters show some examples of possible item configurations. Besid
 ### Stateful items
 The following items are stateful. This means that they always hold the current state of the representing unit (output, relais, sensor, ...). The states which are delivered from the LCN-bus are posted to these items. When an item is changed in openHAB, the state will be forwarded to the LCN-bus. Commands which are sent to a sensor are not forwarded to the LCN-bus!
 
+The states of these items are updated from time to time automatically ...
+
 #### Output
 ```
 Number Light1Ramp { lcn_2="module=157, unit=outputRamp1" }
@@ -88,7 +90,7 @@ Switch ButtonLock_Switch2 { lcn_2="module=203, unit=buttonLockC7" }
 ```
 
 ### Commands
-Commands are represented as a switch. An ON state send to that switch will execute the command. Afterwards the state will automatically be reset to OFF by receiving an acknowledgement from the LCN-bus. It doesn't matter if the acknowledgement is positive or negative.
+Commands are represented as a switch. An ON state send to that switch will execute the command. The state will automatically be reset to OFF when an acknowledgement is received from the LCN-bus. It doesn't matter if the acknowledgement is positive or negative.
 
 #### Stop ramp for output
 ```
@@ -120,7 +122,7 @@ Switch Beeper1 { lcn_2="module=203, unit=beeper, mode=special, beeps=7" }
 
 #### Send a command to a group of relais
 ```
-Switch SomeLights { lcn_2="module=207, unit=relaisGroup, r1=toggle", r2="on", r3="off" }
+Switch SomeLights { lcn_2="module=207, unit=relaisGroup, r1=toggle, r2=on, r3=off" }
 ```
 
 #### Press a button
