@@ -31,7 +31,9 @@ import org.openhab.binding.lcn_2.internal.definition.ISystem;
 import org.openhab.binding.lcn_2.internal.definition.MessageType;
 import org.openhab.binding.lcn_2.internal.definition.Priority;
 import org.openhab.binding.lcn_2.internal.definition.ValueType;
+import org.openhab.binding.lcn_2.internal.helper.LCNLämpchenHandler;
 import org.openhab.binding.lcn_2.internal.message.BooleanMessage;
+import org.openhab.binding.lcn_2.internal.message.MeasurementMessage;
 import org.openhab.binding.lcn_2.internal.message.NumberMessage;
 import org.openhab.binding.lcn_2.internal.message.TextMessage;
 import org.openhab.binding.lcn_2.internal.message.key.MessageKeyImpl;
@@ -120,7 +122,7 @@ public class PCKStatusTranslator implements INode {
             switch (unitType) {
             case 'A': {
                 final IAddress address = new LCNAusgangAddress(moduleAddress, Integer.valueOf(unitNr));
-                sendNumber(system, address, value, ValueType.PERCENTAGE);
+                sendNumber(system, address, value, ValueType.PERCENT);
                 break;
             }
             case 'R':
@@ -161,7 +163,7 @@ public class PCKStatusTranslator implements INode {
             final LCNModuleAddress moduleAddress = new LCNModuleAddress(segmentAddress, moduleNr);
             final String valueStr = text.substring(9);
 
-            sendNumber(system, moduleAddress, Integer.valueOf(valueStr), ValueType.MEASUREMENT);
+            sendMeasurement(system, moduleAddress, Integer.valueOf(valueStr), ValueType.LCN_INTEGER);
         }
     }
 
@@ -209,28 +211,55 @@ public class PCKStatusTranslator implements INode {
         final IAddress addressBlink = new LCNLämpchenAddress(parent, LCNLämpchenAddress.Type.BLINK);
         final IAddress addressFlicker = new LCNLämpchenAddress(parent, LCNLämpchenAddress.Type.FLICKER);
         final IAddress addressOn = new LCNLämpchenAddress(parent, LCNLämpchenAddress.Type.ON);
+
+        final LCNLämpchenHandler handler = new LCNLämpchenHandler();
         if (null != type) {
             switch (type) {
             case BLINK:
-                sendBoolean(system, addressBlink, true, ValueType.BOOLEAN);
-                sendBoolean(system, addressFlicker, false, ValueType.BOOLEAN);
-                sendBoolean(system, addressOn, false, ValueType.BOOLEAN);
+                handler.setCurrentBlinkState(true);
                 break;
             case FLICKER:
-                sendBoolean(system, addressBlink, false, ValueType.BOOLEAN);
-                sendBoolean(system, addressFlicker, true, ValueType.BOOLEAN);
-                sendBoolean(system, addressOn, false, ValueType.BOOLEAN);
+                handler.setCurrentFlickerState(true);
                 break;
             case ON:
-                sendBoolean(system, addressBlink, false, ValueType.BOOLEAN);
-                sendBoolean(system, addressFlicker, false, ValueType.BOOLEAN);
-                sendBoolean(system, addressOn, true, ValueType.BOOLEAN);
+                handler.setCurrentOnState(true);
                 break;
             }
         } else {
+            handler.setCurrentBlinkState(false);
+            handler.setCurrentFlickerState(false);
+            handler.setCurrentOnState(false);
+        }
+
+        switch (handler.getCurrentBlinkState()) {
+        case ON:
+            sendBoolean(system, addressBlink, true, ValueType.BOOLEAN);
+            break;
+        case OFF:
             sendBoolean(system, addressBlink, false, ValueType.BOOLEAN);
+            break;
+        default:
+            break;
+        }
+        switch (handler.getCurrentFlickerState()) {
+        case ON:
+            sendBoolean(system, addressFlicker, true, ValueType.BOOLEAN);
+            break;
+        case OFF:
             sendBoolean(system, addressFlicker, false, ValueType.BOOLEAN);
+            break;
+        default:
+            break;
+        }
+        switch (handler.getCurrentOnState()) {
+        case ON:
+            sendBoolean(system, addressOn, true, ValueType.BOOLEAN);
+            break;
+        case OFF:
             sendBoolean(system, addressOn, false, ValueType.BOOLEAN);
+            break;
+        default:
+            break;
         }
     }
 
@@ -259,6 +288,11 @@ public class PCKStatusTranslator implements INode {
     private void sendBoolean(final ISystem system, final IAddress address, final boolean value, final ValueType type)
             throws InterruptedException {
         system.send(Priority.NORMAL, new BooleanMessage(new MessageKeyImpl(MessageType.STATUS, address, type), value));
+    }
+
+    private void sendMeasurement(final ISystem system, final IAddress address, final int value, final ValueType type)
+            throws InterruptedException {
+        system.send(Priority.NORMAL, new MeasurementMessage(new MessageKeyImpl(MessageType.STATUS, address, type), value));
     }
 
     private void sendNumber(final ISystem system, final IAddress address, final int value, final ValueType type)

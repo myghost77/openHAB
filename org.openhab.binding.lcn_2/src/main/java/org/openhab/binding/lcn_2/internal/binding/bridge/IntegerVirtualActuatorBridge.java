@@ -15,30 +15,21 @@
 
 package org.openhab.binding.lcn_2.internal.binding.bridge;
 
-import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
-import org.openhab.binding.lcn_2.internal.definition.ILCNUnitAddress;
-import org.openhab.binding.lcn_2.internal.definition.IMessage;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.openhab.binding.lcn_2.internal.definition.IVirtualActuatorBindingBridge;
-import org.openhab.core.items.Item;
-import org.openhab.core.types.Command;
-import org.openhab.core.types.State;
+import org.openhab.binding.lcn_2.internal.helper.LCNValueConverter;
 
 /*----------------------------------------------------------------------------*/
 
-public class IntegerVirtualActuatorBridge implements IAddressBindingBridge, IVirtualActuatorBindingBridge {
+public class IntegerVirtualActuatorBridge extends IntegerActuatorBridge implements IVirtualActuatorBindingBridge {
 
-    public static IntegerVirtualActuatorBridge getInstance() {
-        return instance;
-    }
-
-    @Override
-    public boolean checkAllowedCommand(final ILCNUnitAddress unitAddress, final Item item) {
-        return IntegerActuatorBridge.getInstance().checkAllowedCommand(unitAddress, item);
-    }
-
-    @Override
-    public boolean checkAllowedState(final ILCNUnitAddress unitAddress, final Item item) {
-        return IntegerActuatorBridge.getInstance().checkAllowedState(unitAddress, item);
+    public static synchronized IntegerVirtualActuatorBridge getInstance(final LCNValueConverter.Entity entity) {
+        if (!instances.containsKey(entity)) {
+            instances.put(entity, new IntegerVirtualActuatorBridge(LCNValueConverter.get(entity)));
+        }
+        return instances.get(entity);
     }
 
     @Override
@@ -46,21 +37,11 @@ public class IntegerVirtualActuatorBridge implements IAddressBindingBridge, IVir
         return true;
     }
 
-    @Override
-    public IMessage createMessage(final ILCNUnitAddress unitAddress, final Command command) {
-        return IntegerActuatorBridge.getInstance().createMessage(unitAddress, command);
+    protected IntegerVirtualActuatorBridge(final LCNValueConverter.IConverter valueConverter) {
+        super(valueConverter);
     }
 
-    @Override
-    public State createState(final IMessage message, final Item item) {
-        return IntegerActuatorBridge.getInstance().createState(message, item);
-    }
-
-    private IntegerVirtualActuatorBridge() {
-        // due to singleton
-    }
-
-    private static final IntegerVirtualActuatorBridge instance = new IntegerVirtualActuatorBridge();
+    private static final Map<LCNValueConverter.Entity, IntegerVirtualActuatorBridge> instances = new HashMap<LCNValueConverter.Entity, IntegerVirtualActuatorBridge>();
 }
 
 /*----------------------------------------------------------------------------*/

@@ -100,9 +100,9 @@ public class LCNAcknowledgeManager implements INode {
             final IAddress address = message.getKey().getAddress();
             if (address instanceof BaseLCNTargetAddress) {
                 final BaseLCNTargetAddress targetAddress = (BaseLCNTargetAddress) address;
-                final boolean positiveAck = (numberMessage.getValue().asInt() < 0);
+                final boolean positiveAck = (numberMessage.getValue().intValue() < 0);
                 if (!positiveAck) {
-                    logger.error("Negative acknowledgement (code: " + numberMessage.getValue().asInt() + ") for '"
+                    logger.error("Negative acknowledgement (code: " + numberMessage.getValue().toString() + ") for '"
                             + targetAddress.getName() + "'.");
                 }
 

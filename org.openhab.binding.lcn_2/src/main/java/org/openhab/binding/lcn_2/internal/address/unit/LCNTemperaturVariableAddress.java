@@ -16,9 +16,10 @@
 package org.openhab.binding.lcn_2.internal.address.unit;
 
 import org.openhab.binding.lcn_2.internal.address.BaseLCNTargetAddress;
-import org.openhab.binding.lcn_2.internal.binding.bridge.TempSensorBridge;
+import org.openhab.binding.lcn_2.internal.binding.bridge.IntegerSensorBridge;
 import org.openhab.binding.lcn_2.internal.definition.IAddress2PCKCommand;
 import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
+import org.openhab.binding.lcn_2.internal.helper.LCNValueConverter;
 
 /*----------------------------------------------------------------------------*/
 
@@ -34,7 +35,7 @@ public class LCNTemperaturVariableAddress extends BaseLCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return TempSensorBridge.getInstance();
+        return IntegerSensorBridge.getInstance(LCNValueConverter.Entity.CELSIUS); // temperature
     }
 
     @Override

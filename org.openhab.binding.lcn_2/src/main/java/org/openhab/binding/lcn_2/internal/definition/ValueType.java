@@ -18,35 +18,29 @@ package org.openhab.binding.lcn_2.internal.definition;
 /*----------------------------------------------------------------------------*/
 
 public enum ValueType implements IEnum {
-    UNKNOWN, MEASUREMENT, TEMPERATURE, INTEGER, BOOLEAN, PERCENTAGE, ADDING, TEXT, SECONDS, TIME, COMMAND, ACKNOWLEDGE;
+    UNKNOWN, COMMAND, ACKNOWLEDGE, LCN_INTEGER, BOOLEAN, PERCENT, SUMMAND, TEXT, TIME;
 
     @Override
     public String asString() {
         switch (this) {
         case UNKNOWN:
-            return "Unknown";
-        case MEASUREMENT:
-            return "Measurement";
-        case TEMPERATURE:
-            return "Temperature";
-        case INTEGER:
-            return "Integer";
-        case BOOLEAN:
-            return "Boolean";
-        case PERCENTAGE:
-            return "Percentage";
-        case ADDING:
-            return "Adding";
-        case TEXT:
-            return "Text";
-        case SECONDS:
-            return "Seconds";
-        case TIME:
-            return "Time";
+            return "unknown";
         case COMMAND:
-            return "Command";
+            return "command";
         case ACKNOWLEDGE:
-            return "Acknowledge";
+            return "acknowledge";
+        case LCN_INTEGER:
+            return "lcnInteger";
+        case BOOLEAN:
+            return "boolean";
+        case PERCENT:
+            return "percent";
+        case SUMMAND:
+            return "summand";
+        case TEXT:
+            return "text";
+        case TIME:
+            return "time";
         default:
             throw new RuntimeException();
         }
@@ -56,29 +50,23 @@ public enum ValueType implements IEnum {
     public int asNumber() {
         switch (this) {
         case UNKNOWN:
-            return 10;
-        case MEASUREMENT:
-            return 11;
-        case TEMPERATURE:
-            return 12;
-        case INTEGER:
-            return 13;
-        case BOOLEAN:
-            return 14;
-        case PERCENTAGE:
-            return 15;
-        case ADDING:
-            return 16;
-        case TEXT:
-            return 17;
-        case SECONDS:
-            return 18;
-        case TIME:
-            return 19;
+            return 1;
         case COMMAND:
-            return 20;
+            return 2;
         case ACKNOWLEDGE:
-            return 21;
+            return 3;
+        case LCN_INTEGER:
+            return 4;
+        case BOOLEAN:
+            return 5;
+        case PERCENT:
+            return 6;
+        case SUMMAND:
+            return 7;
+        case TEXT:
+            return 8;
+        case TIME:
+            return 9;
         default:
             throw new RuntimeException();
         }

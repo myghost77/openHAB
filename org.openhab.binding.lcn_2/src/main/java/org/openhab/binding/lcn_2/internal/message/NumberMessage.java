@@ -17,22 +17,13 @@ package org.openhab.binding.lcn_2.internal.message;
 
 import org.openhab.binding.lcn_2.internal.definition.IMessage;
 import org.openhab.binding.lcn_2.internal.definition.IMessageKey;
-import org.openhab.binding.lcn_2.internal.helper.FloatOrInteger;
 
 /*----------------------------------------------------------------------------*/
 
-public class NumberMessage extends BaseValueMessage<FloatOrInteger> {
-
-    public NumberMessage(final IMessageKey messageKey, final FloatOrInteger value) {
-        super(messageKey, value);
-    }
-
-    public NumberMessage(final IMessageKey messageKey, final float value) {
-        super(messageKey, new FloatOrInteger(value));
-    }
+public class NumberMessage extends BaseValueMessage<Integer> {
 
     public NumberMessage(final IMessageKey messageKey, final int value) {
-        super(messageKey, new FloatOrInteger(value));
+        super(messageKey, value);
     }
 
     @Override

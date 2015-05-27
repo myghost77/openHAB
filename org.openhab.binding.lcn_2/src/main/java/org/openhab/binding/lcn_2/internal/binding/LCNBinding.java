@@ -25,10 +25,12 @@ import org.openhab.binding.lcn_2.internal.definition.IMessage;
 import org.openhab.binding.lcn_2.internal.node.InternalBusMonitor;
 import org.openhab.binding.lcn_2.internal.node.LCNAcknowledgeManager;
 import org.openhab.binding.lcn_2.internal.node.LCNBindingPublisher;
+import org.openhab.binding.lcn_2.internal.node.LCNLämpchenStatusUpdater;
 import org.openhab.binding.lcn_2.internal.node.LCNRegulatorLockManager;
 import org.openhab.binding.lcn_2.internal.node.LCNStatusGetter;
 import org.openhab.binding.lcn_2.internal.node.LCNValueGetter;
 import org.openhab.binding.lcn_2.internal.node.LCNVirtualActuatorManager;
+import org.openhab.binding.lcn_2.internal.node.PCHKCommandForwarder;
 import org.openhab.binding.lcn_2.internal.node.PCHKCommunicator;
 import org.openhab.binding.lcn_2.internal.node.PCKCommandTranslator;
 import org.openhab.binding.lcn_2.internal.node.PCKStatusTranslator;
@@ -37,7 +39,6 @@ import org.openhab.binding.lcn_2.internal.node.TimeSupplier;
 import org.openhab.binding.lcn_2.internal.system.Engine;
 import org.openhab.core.binding.AbstractBinding;
 import org.openhab.core.events.EventPublisher;
-import org.openhab.core.items.Item;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
 import org.osgi.service.cm.ConfigurationException;
@@ -80,16 +81,19 @@ public class LCNBinding extends AbstractBinding<ILCNBindingProvider> implements 
         if (null != message) {
             final IAddress address = message.getKey().getAddress();
             if (address instanceof ILCNUnitAddress) {
-                final ILCNUnitAddress unitAddress = (ILCNUnitAddress) address;
-                if (null != unitAddress) {
-                    final IAddressBindingBridge bindingBridge = unitAddress.getBindingBridge();
-                    if (null != bindingBridge) {
-                        for (final ILCNBindingProvider lcnProvider : providers) {
-                            for (final Item item : lcnProvider.getItemsFor(unitAddress)) {
-                                final State state = bindingBridge.createState(message, item);
+                for (final ILCNBindingProvider lcnProvider : providers) {
+                    for (final ILCNBindingProvider.ItemWithUnitAddress itemWithUnitAddress : lcnProvider
+                            .getItemsFor((ILCNUnitAddress) address)) {
+                        final IAddressBindingBridge bindingBridge = itemWithUnitAddress.getUnitAddress().getBindingBridge();
+                        if (null != bindingBridge) {
+                            try {
+                                final State state = bindingBridge.createState(message, itemWithUnitAddress.getItem());
                                 if (null != state) {
-                                    eventPublisher.postUpdate(item.getName(), state);
+                                    eventPublisher.postUpdate(itemWithUnitAddress.getItem().getName(), state);
                                 }
+                            } catch (final Exception e) {
+                                logger.error("Could not post update: " + message.getKey().getAddress().getName() + ":" + message.asText());
+                                logger.error(getMessage(e));
                             }
                         }
                     }
@@ -106,14 +110,27 @@ public class LCNBinding extends AbstractBinding<ILCNBindingProvider> implements 
                 if (null != unitAddress) {
                     final IAddressBindingBridge bindingBridge = unitAddress.getBindingBridge();
                     if (null != bindingBridge) {
-                        final IMessage message = bindingBridge.createMessage(unitAddress, command);
-                        if (null != message) {
-                            // forward message to internal event bus of binding
-                            lcnPublisher.send(engine.getSystem(), message);
+                        try {
+                            final IMessage message = bindingBridge.createMessage(unitAddress, command);
+                            if (null != message) {
+                                // forward message to internal event bus of binding
+                                lcnPublisher.send(engine.getSystem(), message);
+                            }
+                        } catch (final Exception e) {
+                            logger.error("Could not send command: " + itemName + ":" + command.toString());
+                            logger.error(getMessage(e));
                         }
                     }
                 }
             }
+        }
+    }
+
+    private static String getMessage(final Exception e) {
+        if (null == e.getMessage()) {
+            return e.getClass().getName();
+        } else {
+            return e.getMessage();
         }
     }
 
@@ -130,10 +147,12 @@ public class LCNBinding extends AbstractBinding<ILCNBindingProvider> implements 
             engine.addNode(new PCKStatusTranslator(communicator));
             engine.addNode(new LCNStatusGetter(communicator));
             engine.addNode(new LCNValueGetter(communicator));
+            engine.addNode(new PCHKCommandForwarder(communicator));
             engine.addNode(new LCNAcknowledgeManager());
             engine.addNode(new ShadowMessageSender());
             engine.addNode(new LCNVirtualActuatorManager());
             engine.addNode(new LCNRegulatorLockManager());
+            engine.addNode(new LCNLämpchenStatusUpdater());
 
             lcnPublisher = new LCNBindingPublisher(this);
             engine.addNode(lcnPublisher);

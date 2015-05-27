@@ -39,8 +39,9 @@ Switch LED1_B { lcn_2="module=52, unit=smallLight2, type=blink"   }
 Switch LED1_F { lcn_2="module=52, unit=smallLight2, type=flicker" }
 ```
 
-#### Sensor
+The small light items can be used hierarchical! When LED1_O, LED1_B and LED1_F are set on, the small light flickers. If LED1_O and LED1_B are set to on only, the small light blinks. The small light is only set to on, if LED1_O is set to on. The small light is off, when all items are set to off.
 
+#### Sensor
 ```
 Contact Window1 { lcn_2="module=203, unit=sensor6" }
 Switch  Motion1 { lcn_2="module=203, unit=sensor4" }
@@ -65,8 +66,11 @@ Number TargetVal "TargVal.: [%.1f °C]" { lcn_2="module=157, unit=regulatorDesir
 
 #### Calculation value (TVar)
 ```
-Number Counter "Stuff: [%d]" { lcn_2="module=110, unit=calcVar" }
+Number Counter "Stuff: [%d]"       { lcn_2="module=110, unit=calcVar" }
+Number Brightn "Brght: [%.1f LUX]" { lcn_2="module=110, unit=calcVar, entity=lux" }
 ```
+
+The following entities can be defined: celsius, old_lux, lux, amp, volt, wind, co2.
 
 ### Items which send its states periodically
 These items re-send its states periodically to the LCN-bus to make sure that all units in the LCN-system will have the correct state after a power loss.

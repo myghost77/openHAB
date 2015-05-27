@@ -13,35 +13,30 @@
 /*                                                                            */
 /******************************************************************************/
 
-package org.openhab.binding.lcn_2.internal.definition;
+package org.openhab.binding.lcn_2.internal.message.key;
+
+import org.openhab.binding.lcn_2.internal.address.PCHKCommandAddress;
+import org.openhab.binding.lcn_2.internal.definition.IAddress;
+import org.openhab.binding.lcn_2.internal.definition.MessageType;
+import org.openhab.binding.lcn_2.internal.definition.ValueType;
 
 /*----------------------------------------------------------------------------*/
 
-public enum MessageType implements IEnum {
-    COMMAND, STATUS;
+public class PCHKCommandKey extends BaseMessageKey {
 
     @Override
-    public String asString() {
-        switch (this) {
-        case COMMAND:
-            return "Command";
-        case STATUS:
-            return "Status";
-        default:
-            throw new RuntimeException();
-        }
+    public MessageType getMessageType() {
+        return MessageType.COMMAND;
     }
 
     @Override
-    public int asNumber() {
-        switch (this) {
-        case COMMAND:
-            return 1;
-        case STATUS:
-            return 2;
-        default:
-            throw new RuntimeException();
-        }
+    public IAddress getAddress() {
+        return PCHKCommandAddress.getInstance();
+    }
+
+    @Override
+    public ValueType getValueType() {
+        return ValueType.TEXT;
     }
 }
 

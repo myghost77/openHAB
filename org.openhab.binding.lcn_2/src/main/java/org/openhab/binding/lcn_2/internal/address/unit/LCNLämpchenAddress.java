@@ -23,7 +23,10 @@ import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
 import org.openhab.binding.lcn_2.internal.definition.IEnum;
 import org.openhab.binding.lcn_2.internal.definition.ILCNUnitAddress;
 import org.openhab.binding.lcn_2.internal.definition.IMessage;
+import org.openhab.binding.lcn_2.internal.definition.IMessageKey;
+import org.openhab.binding.lcn_2.internal.definition.MessageType;
 import org.openhab.binding.lcn_2.internal.helper.Comparator;
+import org.openhab.binding.lcn_2.internal.message.key.MessageKeyImpl;
 import org.openhab.binding.lcn_2.internal.node._2pck.LCNLämpchen2PCKCommand;
 
 /*----------------------------------------------------------------------------*/
@@ -66,9 +69,14 @@ public class LCNLämpchenAddress implements ILCNUnitAddress {
         }
     }
 
-    public LCNLämpchenAddress(final LCNLämpchenParentAddress parent, final Type type) {
+    private LCNLämpchenAddress(final LCNLämpchenParentAddress parent, final Type type, final boolean shadow) {
         this.parent = parent;
         this.type = type;
+        this.shadow = shadow;
+    }
+
+    public LCNLämpchenAddress(final LCNLämpchenParentAddress parent, final Type type) {
+        this(parent, type, false);
     }
 
     @Override
@@ -115,6 +123,18 @@ public class LCNLämpchenAddress implements ILCNUnitAddress {
 
     @Override
     public IMessage getShadowMessage(final IMessage parentMessage) {
+        // re-send stuff as status
+        if (MessageType.COMMAND == parentMessage.getKey().getMessageType()) {
+            final IAddress address = parentMessage.getKey().getAddress();
+            if (address instanceof LCNLämpchenAddress) {
+                final LCNLämpchenAddress unitAddress = (LCNLämpchenAddress) address;
+                if (!unitAddress.isShadow()) {
+                    final IMessageKey newKey = new MessageKeyImpl(MessageType.STATUS, new LCNLämpchenAddress(parent, type, true),
+                            parentMessage.getKey().getValueType());
+                    return parentMessage.getCopy(newKey);
+                }
+            }
+        }
         return null;
     }
 
@@ -131,9 +151,15 @@ public class LCNLämpchenAddress implements ILCNUnitAddress {
         return type;
     }
 
+    public boolean isShadow() {
+        return shadow;
+    }
+
     private final LCNLämpchenParentAddress parent;
 
     private final Type type;
+
+    private final boolean shadow;
 }
 
 /*----------------------------------------------------------------------------*/

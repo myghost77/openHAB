@@ -15,7 +15,6 @@
 
 package org.openhab.binding.lcn_2.internal.binding.bridge;
 
-import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
 import org.openhab.binding.lcn_2.internal.definition.ILCNUnitAddress;
 import org.openhab.binding.lcn_2.internal.definition.IMessage;
 import org.openhab.binding.lcn_2.internal.definition.IMessageKey;
@@ -26,11 +25,10 @@ import org.openhab.binding.lcn_2.internal.message.key.MessageKeyImpl;
 import org.openhab.core.items.Item;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.types.Command;
-import org.openhab.core.types.State;
 
 /*----------------------------------------------------------------------------*/
 
-public class BooleanActuatorBridge implements IAddressBindingBridge {
+public class BooleanActuatorBridge extends BooleanSensorBridge {
 
     public static BooleanActuatorBridge getInstance() {
         return instance;
@@ -43,21 +41,6 @@ public class BooleanActuatorBridge implements IAddressBindingBridge {
                 return true;
             }
         }
-        return false;
-    }
-
-    @Override
-    public boolean checkAllowedState(final ILCNUnitAddress unitAddress, final Item item) {
-        for (final Class<? extends State> dataType : item.getAcceptedDataTypes()) {
-            if (dataType.equals(OnOffType.class)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isGroupAllowed() {
         return false;
     }
 
@@ -75,21 +58,8 @@ public class BooleanActuatorBridge implements IAddressBindingBridge {
         return null;
     }
 
-    @Override
-    public State createState(final IMessage message, final Item item) {
-        if (MessageType.STATUS == message.getKey().getMessageType() && ValueType.BOOLEAN == message.getKey().getValueType()
-                && message instanceof BooleanMessage) {
-            if (((BooleanMessage) message).getValue().booleanValue()) {
-                return OnOffType.ON;
-            } else {
-                return OnOffType.OFF;
-            }
-        }
-        return null;
-    }
-
-    private BooleanActuatorBridge() {
-        // due to singleton
+    protected BooleanActuatorBridge() {
+        // supposed to be a singleton
     }
 
     private static final BooleanActuatorBridge instance = new BooleanActuatorBridge();

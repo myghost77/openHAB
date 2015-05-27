@@ -56,6 +56,7 @@ import org.openhab.binding.lcn_2.internal.address.unit.LCNZählRechenVariableAddr
 import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
 import org.openhab.binding.lcn_2.internal.definition.IEnum;
 import org.openhab.binding.lcn_2.internal.definition.ILCNUnitAddress;
+import org.openhab.binding.lcn_2.internal.helper.LCNValueConverter;
 import org.openhab.core.items.Item;
 import org.openhab.model.item.binding.AbstractGenericBindingProvider;
 import org.openhab.model.item.binding.BindingConfigParseException;
@@ -68,7 +69,11 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
 
     public LCNBindingProviderImpl() {
         if (unitAddressDict.isEmpty()) {
-            fillUnitAddressDict();
+            try {
+                fillUnitAddressDict();
+            } catch (final BindingConfigParseException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -97,12 +102,12 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
     }
 
     @Override
-    public List<Item> getItemsFor(final ILCNUnitAddress unitAddress) {
-        final List<Item> result = new ArrayList<Item>();
+    public List<ItemWithUnitAddress> getItemsFor(final ILCNUnitAddress unitAddress) {
+        final List<ItemWithUnitAddress> result = new ArrayList<ItemWithUnitAddress>();
         for (final String itemName : getItemNames()) {
             final ILCNUnitAddress tempUnitAddress = (ILCNUnitAddress) bindingConfigs.get(itemName);
             if (tempUnitAddress.compareTo(unitAddress) == 0) {
-                result.add(items.get(itemName));
+                result.add(new ItemWithUnitAddress(items.get(itemName), tempUnitAddress));
             }
         }
         return result;
@@ -129,9 +134,9 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
     // helper class
     private static abstract class UnitAddressCreator {
 
-        public String getUnitConfigText() {
+        public String getUnitConfigText() throws BindingConfigParseException {
             if (null == refAddr) {
-                final ILCNUnitAddress tempUnitAddress = create(dummyTargetAddress);
+                final ILCNUnitAddress tempUnitAddress = create(dummyTargetAddress, null, new HashMap<String, String>());
                 if (tempUnitAddress instanceof BaseLCNUnitAddress) {
                     refAddr = (BaseLCNUnitAddress) tempUnitAddress;
                 }
@@ -142,7 +147,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
             return refAddr.getUnitName();
         }
 
-        public abstract ILCNUnitAddress create(BaseLCNTargetAddress targetAddress);
+        public abstract ILCNUnitAddress create(BaseLCNTargetAddress targetAddress, Item item, Map<String, String> bindingConfigParts)
+                throws BindingConfigParseException;
 
         private BaseLCNUnitAddress refAddr = null;
     }
@@ -250,16 +256,17 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         return result;
     }
 
-    private static void addToUnitAddressDict(final UnitAddressCreator obj) {
+    private static void addToUnitAddressDict(final UnitAddressCreator obj) throws BindingConfigParseException {
         unitAddressDict.put(obj.getUnitConfigText(), obj);
     }
 
-    private static void fillUnitAddressDict() {
+    private static void fillUnitAddressDict() throws BindingConfigParseException {
         // LCNAusgangAddress
         for (final int unitNr : createUnitNumberArray(new LCNAusgangAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNAusgangAddress(targetAddress, unitNr);
                 }
             });
@@ -269,7 +276,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNAusgangFlackernParentAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNAusgangFlackernParentAddress(targetAddress, unitNr);
                 }
             });
@@ -279,7 +287,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNAusgangRampeAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNAusgangRampeAddress(targetAddress, unitNr);
                 }
             });
@@ -289,7 +298,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNAusgangRampeStoppAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNAusgangRampeStoppAddress(targetAddress, unitNr);
                 }
             });
@@ -299,7 +309,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNBinärsensorAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNBinärsensorAddress(targetAddress, unitNr);
                 }
             });
@@ -309,7 +320,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNLämpchenParentAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNLämpchenParentAddress(targetAddress, unitNr);
                 }
             });
@@ -319,7 +331,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNLichtszeneAktionParentAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNLichtszeneAktionParentAddress(targetAddress, unitNr);
                 }
             });
@@ -328,7 +341,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         // LCNLichtszeneRegistersatzAddress
         addToUnitAddressDict(new UnitAddressCreator() {
             @Override
-            public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+            public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                    final Map<String, String> bindingConfigParts) {
                 return new LCNLichtszeneRegistersatzAddress(targetAddress);
             }
         });
@@ -336,7 +350,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         // LCNPieperParentAddress
         addToUnitAddressDict(new UnitAddressCreator() {
             @Override
-            public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+            public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                    final Map<String, String> bindingConfigParts) {
                 return new LCNPieperParentAddress(targetAddress);
             }
         });
@@ -345,7 +360,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNReglerSollwertAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNReglerSollwertAddress(targetAddress, unitNr);
                 }
             });
@@ -355,7 +371,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNReglersperreParentAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNReglersperreParentAddress(targetAddress, unitNr);
                 }
             });
@@ -365,7 +382,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNRelaisAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNRelaisAddress(targetAddress, unitNr);
                 }
             });
@@ -374,7 +392,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         // LCNRelaisGroupParentAddress
         addToUnitAddressDict(new UnitAddressCreator() {
             @Override
-            public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+            public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                    final Map<String, String> bindingConfigParts) {
                 return new LCNRelaisGroupParentAddress(targetAddress);
             }
         });
@@ -385,7 +404,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
                 for (final int unitNr : createUnitNumberArray(new LCNSendeTasteAddress(dummyTargetAddress, 0, type, bank).getMaxNrOfUnits())) {
                     addToUnitAddressDict(new UnitAddressCreator() {
                         @Override
-                        public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                        public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                                final Map<String, String> bindingConfigParts) {
                             return new LCNSendeTasteAddress(targetAddress, unitNr, type, bank);
                         }
                     });
@@ -399,7 +419,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
                     .getMaxNrOfUnits())) {
                 addToUnitAddressDict(new UnitAddressCreator() {
                     @Override
-                    public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                    public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                            final Map<String, String> bindingConfigParts) {
                         return new LCNSendeTasteVerzögertParentAddress(targetAddress, unitNr, bank);
                     }
                 });
@@ -411,7 +432,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
             for (final int unitNr : createUnitNumberArray(new LCNTastensperreAddress(dummyTargetAddress, 0, bank).getMaxNrOfUnits())) {
                 addToUnitAddressDict(new UnitAddressCreator() {
                     @Override
-                    public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                    public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                            final Map<String, String> bindingConfigParts) {
                         return new LCNTastensperreAddress(targetAddress, unitNr, bank);
                     }
                 });
@@ -422,7 +444,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNSummeParentAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNSummeParentAddress(targetAddress, unitNr);
                 }
             });
@@ -432,7 +455,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         for (final int unitNr : createUnitNumberArray(new LCNTemperaturVariableAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
-                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
+                public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                        final Map<String, String> bindingConfigParts) {
                     return new LCNTemperaturVariableAddress(targetAddress, unitNr);
                 }
             });
@@ -441,8 +465,22 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         // LCNZählRechenVariableAddress
         addToUnitAddressDict(new UnitAddressCreator() {
             @Override
-            public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress) {
-                return new LCNZählRechenVariableAddress(targetAddress);
+            public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
+                    final Map<String, String> bindingConfigParts) throws BindingConfigParseException {
+                // recognize entity
+                final String entityStr = popValue(item, bindingConfigParts, "entity", "");
+                final LCNValueConverter.Entity entity;
+                if (!entityStr.isEmpty()) {
+                    entity = new CheckEnum<LCNValueConverter.Entity>(LCNValueConverter.Entity.asList()).get(entityStr);
+                    if (null == entity) {
+                        throw createParseException(item, "Entity not recognized: '" + entityStr + "'");
+                    }
+                } else {
+                    entity = null;
+                }
+
+                // return object
+                return new LCNZählRechenVariableAddress(targetAddress, entity);
             }
         });
     }
@@ -647,7 +685,7 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         // create unit address
         ILCNUnitAddress result;
         if (unitAddressDict.containsKey(unitText)) {
-            result = unitAddressDict.get(unitText).create(targetAddress);
+            result = unitAddressDict.get(unitText).create(targetAddress, item, bindingConfigParts);
         } else {
             result = null;
         }

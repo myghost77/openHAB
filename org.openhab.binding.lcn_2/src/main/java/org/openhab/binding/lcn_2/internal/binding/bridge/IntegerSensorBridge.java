@@ -15,11 +15,15 @@
 
 package org.openhab.binding.lcn_2.internal.binding.bridge;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
 import org.openhab.binding.lcn_2.internal.definition.ILCNUnitAddress;
 import org.openhab.binding.lcn_2.internal.definition.IMessage;
 import org.openhab.binding.lcn_2.internal.definition.MessageType;
 import org.openhab.binding.lcn_2.internal.definition.ValueType;
+import org.openhab.binding.lcn_2.internal.helper.LCNValueConverter;
 import org.openhab.binding.lcn_2.internal.message.NumberMessage;
 import org.openhab.core.items.Item;
 import org.openhab.core.library.types.DecimalType;
@@ -30,8 +34,11 @@ import org.openhab.core.types.State;
 
 public class IntegerSensorBridge implements IAddressBindingBridge {
 
-    public static IntegerSensorBridge getInstance() {
-        return instance;
+    public static synchronized IntegerSensorBridge getInstance(final LCNValueConverter.Entity entity) {
+        if (!instances.containsKey(entity)) {
+            instances.put(entity, new IntegerSensorBridge(LCNValueConverter.get(entity)));
+        }
+        return instances.get(entity);
     }
 
     @Override
@@ -61,18 +68,29 @@ public class IntegerSensorBridge implements IAddressBindingBridge {
 
     @Override
     public State createState(final IMessage message, final Item item) {
-        if (MessageType.STATUS == message.getKey().getMessageType() && ValueType.INTEGER == message.getKey().getValueType()
+        if (MessageType.STATUS == message.getKey().getMessageType() && ValueType.LCN_INTEGER == message.getKey().getValueType()
                 && message instanceof NumberMessage) {
-            return new DecimalType(((NumberMessage) message).getValue().asInt());
+            if (null != valueConverter) {
+                return new DecimalType(valueConverter.fromLcn(((NumberMessage) message).getValue()));
+            } else {
+                return new DecimalType(((NumberMessage) message).getValue());
+            }
+        } else {
+            return null;
         }
-        return null;
     }
 
-    private IntegerSensorBridge() {
-        // due to singleton
+    protected IntegerSensorBridge(final LCNValueConverter.IConverter valueConverter) {
+        this.valueConverter = valueConverter;
     }
 
-    private static final IntegerSensorBridge instance = new IntegerSensorBridge();
+    protected LCNValueConverter.IConverter getValueConverter() {
+        return valueConverter;
+    }
+
+    private static final Map<LCNValueConverter.Entity, IntegerSensorBridge> instances = new HashMap<LCNValueConverter.Entity, IntegerSensorBridge>();
+
+    private final LCNValueConverter.IConverter valueConverter;
 }
 
 /*----------------------------------------------------------------------------*/

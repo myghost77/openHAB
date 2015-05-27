@@ -19,18 +19,20 @@ import org.openhab.binding.lcn_2.internal.address.BaseLCNTargetAddress;
 import org.openhab.binding.lcn_2.internal.binding.bridge.IntegerSensorBridge;
 import org.openhab.binding.lcn_2.internal.definition.IAddress2PCKCommand;
 import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
+import org.openhab.binding.lcn_2.internal.helper.LCNValueConverter;
 
 /*----------------------------------------------------------------------------*/
 
 public class LCNZählRechenVariableAddress extends BaseLCNUnitAddress {
 
-    public LCNZählRechenVariableAddress(final BaseLCNTargetAddress targetAddress) {
+    public LCNZählRechenVariableAddress(final BaseLCNTargetAddress targetAddress, final LCNValueConverter.Entity entity) {
         super(targetAddress);
+        this.entity = entity;
     }
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return IntegerSensorBridge.getInstance();
+        return IntegerSensorBridge.getInstance(entity);
     }
 
     @Override
@@ -47,6 +49,8 @@ public class LCNZählRechenVariableAddress extends BaseLCNUnitAddress {
     public int getMaxNrOfUnits() {
         return 1;
     }
+
+    private final LCNValueConverter.Entity entity;
 }
 
 /*----------------------------------------------------------------------------*/

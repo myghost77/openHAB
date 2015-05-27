@@ -51,8 +51,8 @@ public class LCNAusgangRampeDictionary extends BaseAddress2PCKCommand<LCNAusgang
 
     @Override
     protected String __createCommand(final LCNAusgangRampeAddress unitAddress, final IMessage message) {
-        if (message.getKey().getValueType() == ValueType.INTEGER && message instanceof NumberMessage) {
-            int ramp = ((NumberMessage) message).getValue().asInt();
+        if (message.getKey().getValueType() == ValueType.LCN_INTEGER && message instanceof NumberMessage) {
+            int ramp = ((NumberMessage) message).getValue();
             if (ramp < 0)
                 ramp = 0;
             if (ramp > 250)

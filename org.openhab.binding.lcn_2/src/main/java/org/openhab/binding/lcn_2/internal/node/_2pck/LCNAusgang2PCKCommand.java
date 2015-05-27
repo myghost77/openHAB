@@ -36,34 +36,34 @@ public class LCNAusgang2PCKCommand extends BaseAddress2PCKCommand<LCNAusgangAddr
     @Override
     protected String __createCommand(final LCNAusgangAddress unitAddress, final IMessage message) {
         switch (message.getKey().getValueType()) {
-        case PERCENTAGE: {
-            final int percentage;
+        case PERCENT: {
+            final int percent;
             final int ramp;
             if (message instanceof BooleanMessage) {
-                percentage = ((BooleanMessage) message).getValue() ? 100 : 0;
+                percent = ((BooleanMessage) message).getValue() ? 100 : 0;
                 ramp = 0; // don't use ramp for switching on/off to avoid receiving status updates
             } else if (message instanceof NumberMessage) {
-                percentage = ((NumberMessage) message).getValue().asInt();
+                percent = ((NumberMessage) message).getValue();
                 ramp = LCNAusgangRampeDictionary.getInstance().getRamp(unitAddress); // get ramp from dictionary
             } else {
                 return null;
             }
 
-            return createCommandStr(unitAddress, "A" + translate1Digit(unitAddress.getUnitNr()) + "DI", translate3Digits(percentage)
+            return createCommandStr(unitAddress, "A" + translate1Digit(unitAddress.getUnitNr()) + "DI", translate3Digits(percent)
                     + translate3Digits(ramp));
         }
 
         case BOOLEAN:
             if (message instanceof BooleanMessage) {
-                final String percentageRampStr = ((BooleanMessage) message).getValue() ? "100000" : "000000";
-                return createCommandStr(unitAddress, "A" + translate1Digit(unitAddress.getUnitNr()) + "DI", percentageRampStr);
+                final String percentRampStr = ((BooleanMessage) message).getValue() ? "100000" : "000000";
+                return createCommandStr(unitAddress, "A" + translate1Digit(unitAddress.getUnitNr()) + "DI", percentRampStr);
             } else {
                 return null;
             }
 
-        case ADDING:
+        case SUMMAND:
             if (message instanceof NumberMessage) {
-                int toAdd = ((NumberMessage) message).getValue().asInt();
+                int toAdd = ((NumberMessage) message).getValue();
                 final String subCmdStr;
                 if (toAdd < 0) {
                     toAdd = -toAdd; // abs

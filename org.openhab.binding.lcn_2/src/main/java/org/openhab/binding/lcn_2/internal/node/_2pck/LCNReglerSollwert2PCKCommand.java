@@ -18,7 +18,6 @@ package org.openhab.binding.lcn_2.internal.node._2pck;
 import org.openhab.binding.lcn_2.internal.address.unit.LCNReglerSollwertAddress;
 import org.openhab.binding.lcn_2.internal.definition.IMessage;
 import org.openhab.binding.lcn_2.internal.definition.ValueType;
-import org.openhab.binding.lcn_2.internal.helper.LCNValueConverter;
 import org.openhab.binding.lcn_2.internal.message.NumberMessage;
 
 /*----------------------------------------------------------------------------*/
@@ -36,8 +35,8 @@ public class LCNReglerSollwert2PCKCommand extends BaseAddress2PCKCommand<LCNRegl
 
     @Override
     protected String __createCommand(final LCNReglerSollwertAddress unitAddress, final IMessage message) {
-        if (ValueType.TEMPERATURE == message.getKey().getValueType() && message instanceof NumberMessage) {
-            final int value = LCNValueConverter.temperature2Measurement(((NumberMessage) message).getValue().asFloat());
+        if (ValueType.LCN_INTEGER == message.getKey().getValueType() && message instanceof NumberMessage) {
+            final int value = ((NumberMessage) message).getValue();
             if (value < 0 || value > 2000) {
                 return null;
             }

@@ -13,42 +13,48 @@
 /*                                                                            */
 /******************************************************************************/
 
-package org.openhab.binding.lcn_2.internal.helper;
+package org.openhab.binding.lcn_2.internal.node;
+
+import org.openhab.binding.lcn_2.internal.definition.IHasAddress;
+import org.openhab.binding.lcn_2.internal.definition.IMessage;
+import org.openhab.binding.lcn_2.internal.definition.INode;
+import org.openhab.binding.lcn_2.internal.definition.ISystem;
+import org.openhab.binding.lcn_2.internal.definition.Priority;
+import org.openhab.binding.lcn_2.internal.message.key.MessageKeyImpl;
+import org.openhab.binding.lcn_2.internal.message.key.PCHKCommandKey;
 
 /*----------------------------------------------------------------------------*/
 
-public class FloatOrInteger {
+public class PCHKCommandForwarder implements INode {
 
-    public FloatOrInteger(final float value) {
-        this.strVal = Float.toString(value);
-        this.floatVal = value;
-        this.intVal = Math.round(value);
-    }
-
-    public FloatOrInteger(final int value) {
-        this.strVal = Integer.toString(value);
-        this.floatVal = (float) value;
-        this.intVal = value;
+    public PCHKCommandForwarder(final IHasAddress pchkCommunicator) {
+        this.pchkCommunicator = pchkCommunicator;
     }
 
     @Override
-    public String toString() {
-        return strVal;
+    public void register(final ISystem system) {
+        system.register(this, new PCHKCommandKey());
     }
 
-    public float asFloat() {
-        return floatVal;
+    @Override
+    public void start() {
     }
 
-    public int asInt() {
-        return intVal;
+    @Override
+    public void stop() {
     }
 
-    private final String strVal;
+    @Override
+    public void join() throws InterruptedException {
+    }
 
-    private final float floatVal;
+    @Override
+    public void notify(final ISystem system, final IMessage message, final Priority priority) throws InterruptedException {
+        system.send(priority, message.getCopy(new MessageKeyImpl(message.getKey().getMessageType(), pchkCommunicator.getAddress(), message
+                .getKey().getValueType())));
+    }
 
-    private final int intVal;
+    private final IHasAddress pchkCommunicator;
 }
 
 /*----------------------------------------------------------------------------*/

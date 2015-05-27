@@ -35,8 +35,8 @@ public class LCNLichtszeneRegistersatz2PCKCommand extends BaseAddress2PCKCommand
 
     @Override
     protected String __createCommand(final LCNLichtszeneRegistersatzAddress unitAddress, final IMessage message) {
-        if (ValueType.INTEGER == message.getKey().getValueType() && message instanceof NumberMessage) {
-            int registerSet = ((NumberMessage) message).getValue().asInt();
+        if (ValueType.LCN_INTEGER == message.getKey().getValueType() && message instanceof NumberMessage) {
+            int registerSet = ((NumberMessage) message).getValue();
             return createCommandStr(unitAddress, "SZW", translate3Digits(registerSet));
         } else {
             return null;

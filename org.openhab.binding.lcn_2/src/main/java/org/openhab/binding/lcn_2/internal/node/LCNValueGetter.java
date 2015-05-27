@@ -31,7 +31,7 @@ import org.openhab.binding.lcn_2.internal.definition.ISystem;
 import org.openhab.binding.lcn_2.internal.definition.MessageType;
 import org.openhab.binding.lcn_2.internal.definition.Priority;
 import org.openhab.binding.lcn_2.internal.definition.ValueType;
-import org.openhab.binding.lcn_2.internal.helper.LCNValueConverter;
+import org.openhab.binding.lcn_2.internal.message.MeasurementMessage;
 import org.openhab.binding.lcn_2.internal.message.NumberMessage;
 import org.openhab.binding.lcn_2.internal.message.TextMessage;
 import org.openhab.binding.lcn_2.internal.message.TimeStatus;
@@ -86,10 +86,10 @@ public class LCNValueGetter implements INode {
                         for (final LCNTemperaturVariableAddress tempVarAddr : LCNDictionary.getInstance().getTemperatureVals()) {
                             switch (tempVarAddr.getUnitNr()) {
                             case 1:
-                                values.add(new ValueDefinition(tempVarAddr, "MWTA", true));
+                                values.add(new ValueDefinition(tempVarAddr, "MWTA"));
                                 break;
                             case 2:
-                                values.add(new ValueDefinition(tempVarAddr, "MWTB", true));
+                                values.add(new ValueDefinition(tempVarAddr, "MWTB"));
                                 break;
                             default:
                                 break;
@@ -99,10 +99,10 @@ public class LCNValueGetter implements INode {
                         for (final LCNReglerSollwertAddress regDesValAddr : LCNDictionary.getInstance().getRegDesiredVals()) {
                             switch (regDesValAddr.getUnitNr()) {
                             case 1:
-                                values.add(new ValueDefinition(regDesValAddr, "MWSA", true));
+                                values.add(new ValueDefinition(regDesValAddr, "MWSA"));
                                 break;
                             case 2:
-                                values.add(new ValueDefinition(regDesValAddr, "MWSB", true));
+                                values.add(new ValueDefinition(regDesValAddr, "MWSB"));
                                 break;
                             default:
                                 break;
@@ -110,7 +110,7 @@ public class LCNValueGetter implements INode {
                         }
 
                         for (final LCNZählRechenVariableAddress calcVarAddr : LCNDictionary.getInstance().getCalculationVars()) {
-                            values.add(new ValueDefinition(calcVarAddr, "MWV", false));
+                            values.add(new ValueDefinition(calcVarAddr, "MWV"));
                         }
                     }
 
@@ -132,15 +132,10 @@ public class LCNValueGetter implements INode {
             }
         } else {
             if (null != currentValue) {
-                if (ValueType.MEASUREMENT == message.getKey().getValueType() && message instanceof NumberMessage) {
-                    final int value = ((NumberMessage) message).getValue().asInt();
-                    if (currentValue.isTemperature()) {
-                        system.send(Priority.NORMAL, new NumberMessage(new MessageKeyImpl(MessageType.STATUS,
-                                currentValue.getUnitAddress(), ValueType.TEMPERATURE), LCNValueConverter.measurement2Temperature(value)));
-                    } else {
-                        system.send(Priority.NORMAL, new NumberMessage(new MessageKeyImpl(MessageType.STATUS,
-                                currentValue.getUnitAddress(), ValueType.INTEGER), value));
-                    }
+                if (ValueType.LCN_INTEGER == message.getKey().getValueType() && message instanceof MeasurementMessage) {
+                    final int value = ((MeasurementMessage) message).getValue();
+                    system.send(Priority.NORMAL, new NumberMessage(new MessageKeyImpl(MessageType.STATUS, currentValue.getUnitAddress(),
+                            ValueType.LCN_INTEGER), value));
 
                     lastActionMillis = currentTimeMillis;
                     currentValue = null;
@@ -151,10 +146,9 @@ public class LCNValueGetter implements INode {
 
     private static class ValueDefinition {
 
-        public ValueDefinition(final ILCNUnitAddress unitAddress, final String pchkCommand, boolean isTemperature) {
+        public ValueDefinition(final ILCNUnitAddress unitAddress, final String pchkCommand) {
             this.unitAddress = unitAddress;
             this.pchkCommand = pchkCommand;
-            this.isTemperature = isTemperature;
         }
 
         public ILCNUnitAddress getUnitAddress() {
@@ -165,15 +159,9 @@ public class LCNValueGetter implements INode {
             return pchkCommand;
         }
 
-        public boolean isTemperature() {
-            return isTemperature;
-        }
-
         private final ILCNUnitAddress unitAddress;
 
         private final String pchkCommand;
-
-        private final boolean isTemperature;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(LCNValueGetter.class);

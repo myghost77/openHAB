@@ -27,7 +27,10 @@ import org.openhab.binding.lcn_2.internal.definition.MessageType;
 import org.openhab.binding.lcn_2.internal.definition.ValueType;
 import org.openhab.binding.lcn_2.internal.helper.Comparator;
 import org.openhab.binding.lcn_2.internal.message.BooleanMessage;
+import org.openhab.binding.lcn_2.internal.message.TextMessage;
 import org.openhab.binding.lcn_2.internal.message.key.MessageKeyImpl;
+import org.openhab.binding.lcn_2.internal.message.key.PCHKCommandKey;
+import org.openhab.binding.lcn_2.internal.node._2pck.BaseAddress2PCKCommand;
 import org.openhab.binding.lcn_2.internal.node._2pck.LCNReglersperre2PCKCommand;
 
 /*----------------------------------------------------------------------------*/
@@ -80,11 +83,28 @@ public class LCNReglersperreAddress implements ILCNUnitAddress {
                 final IMessageKey targetMessageKey = new MessageKeyImpl(MessageType.COMMAND, target, ValueType.BOOLEAN);
                 return new BooleanMessage(targetMessageKey, false); // switch off target
             } else {
-                return null; // TODO: "Wiederhole Statuskommando" for regulator ???
+                final IAddress address = parentMessage.getKey().getAddress();
+                if (address instanceof LCNReglersperreAddress) {
+                    final LCNReglersperreAddress unitAddress = (LCNReglersperreAddress) address;
+                    final String regulatorNrStr;
+                    switch (unitAddress.getParent().getUnitNr()) {
+                    case 1:
+                        regulatorNrStr = "001";
+                        break;
+                    case 2:
+                        regulatorNrStr = "002";
+                        break;
+                    default:
+                        regulatorNrStr = null;
+                    }
+                    if (null != regulatorNrStr) {
+                        return new TextMessage(new PCHKCommandKey(), BaseAddress2PCKCommand.createCommandStr(unitAddress, "X2007251",
+                                regulatorNrStr));
+                    }
+                }
             }
-        } else {
-            return null;
         }
+        return null;
     }
 
     @Override

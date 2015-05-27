@@ -13,35 +13,22 @@
 /*                                                                            */
 /******************************************************************************/
 
-package org.openhab.binding.lcn_2.internal.definition;
+package org.openhab.binding.lcn_2.internal.message;
+
+import org.openhab.binding.lcn_2.internal.definition.IMessage;
+import org.openhab.binding.lcn_2.internal.definition.IMessageKey;
 
 /*----------------------------------------------------------------------------*/
 
-public enum MessageType implements IEnum {
-    COMMAND, STATUS;
+public class MeasurementMessage extends NumberMessage {
 
-    @Override
-    public String asString() {
-        switch (this) {
-        case COMMAND:
-            return "Command";
-        case STATUS:
-            return "Status";
-        default:
-            throw new RuntimeException();
-        }
+    public MeasurementMessage(final IMessageKey messageKey, final int value) {
+        super(messageKey, value);
     }
 
     @Override
-    public int asNumber() {
-        switch (this) {
-        case COMMAND:
-            return 1;
-        case STATUS:
-            return 2;
-        default:
-            throw new RuntimeException();
-        }
+    public IMessage getCopy(final IMessageKey key) {
+        return new MeasurementMessage(key, value);
     }
 }
 

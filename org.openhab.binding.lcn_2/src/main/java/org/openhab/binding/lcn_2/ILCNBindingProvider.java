@@ -25,7 +25,28 @@ import org.openhab.core.items.Item;
 
 public interface ILCNBindingProvider extends BindingProvider {
 
-    List<Item> getItemsFor(ILCNUnitAddress unitAddress);
+    public static class ItemWithUnitAddress {
+
+        public ItemWithUnitAddress(final Item item, ILCNUnitAddress unitAddress) {
+            this.item = item;
+            this.unitAddress = unitAddress;
+        }
+
+        public Item getItem() {
+            return item;
+        }
+
+        public ILCNUnitAddress getUnitAddress() {
+            return unitAddress;
+        }
+
+        private final Item item;
+
+        private final ILCNUnitAddress unitAddress;
+
+    }
+
+    List<ItemWithUnitAddress> getItemsFor(ILCNUnitAddress unitAddress);
 
     ILCNUnitAddress getUnitAddressFor(String itemName);
 

@@ -69,21 +69,21 @@ public class DimActuatorBridge implements IAddressBindingBridge {
         if (command instanceof OnOffType) {
             switch ((OnOffType) command) {
             case ON:
-                return new BooleanMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.PERCENTAGE), true);
+                return new BooleanMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.PERCENT), true);
             case OFF:
-                return new BooleanMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.PERCENTAGE), false);
+                return new BooleanMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.PERCENT), false);
             }
         }
         if (command instanceof IncreaseDecreaseType) {
             switch ((IncreaseDecreaseType) command) {
             case INCREASE:
-                return new NumberMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.ADDING), +2);
+                return new NumberMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.SUMMAND), +2);
             case DECREASE:
-                return new NumberMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.ADDING), -2);
+                return new NumberMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.SUMMAND), -2);
             }
         }
         if (command instanceof PercentType) {
-            return new NumberMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.PERCENTAGE),
+            return new NumberMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.PERCENT),
                     ((PercentType) command).intValue());
         }
         return null;
@@ -91,7 +91,7 @@ public class DimActuatorBridge implements IAddressBindingBridge {
 
     @Override
     public State createState(final IMessage message, final Item item) {
-        if (MessageType.STATUS == message.getKey().getMessageType() && ValueType.PERCENTAGE == message.getKey().getValueType()
+        if (MessageType.STATUS == message.getKey().getMessageType() && ValueType.PERCENT == message.getKey().getValueType()
                 && message instanceof NumberMessage) {
             Boolean useDimmer = null;
             for (final Class<? extends State> dataType : item.getAcceptedDataTypes()) {
@@ -108,7 +108,7 @@ public class DimActuatorBridge implements IAddressBindingBridge {
                 return null;
             }
 
-            final int percent = ((NumberMessage) message).getValue().asInt();
+            final int percent = ((NumberMessage) message).getValue();
             if (useDimmer.booleanValue()) {
                 return new PercentType(percent);
             } else {

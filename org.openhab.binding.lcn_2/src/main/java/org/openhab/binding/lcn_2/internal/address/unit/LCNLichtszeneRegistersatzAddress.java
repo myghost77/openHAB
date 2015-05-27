@@ -31,7 +31,7 @@ public class LCNLichtszeneRegistersatzAddress extends BaseLCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return IntegerVirtualActuatorBridge.getInstance();
+        return IntegerVirtualActuatorBridge.getInstance(null);
     }
 
     @Override

@@ -85,8 +85,8 @@ public class BooleanSensorBridge implements IAddressBindingBridge {
         return null;
     }
 
-    private BooleanSensorBridge() {
-        // due to singleton
+    protected BooleanSensorBridge() {
+        // supposed to be a singleton
     }
 
     private static final BooleanSensorBridge instance = new BooleanSensorBridge();

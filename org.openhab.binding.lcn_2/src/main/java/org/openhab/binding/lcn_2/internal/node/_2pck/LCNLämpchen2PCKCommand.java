@@ -15,9 +15,14 @@
 
 package org.openhab.binding.lcn_2.internal.node._2pck;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import org.openhab.binding.lcn_2.internal.address.unit.LCNLämpchenAddress;
+import org.openhab.binding.lcn_2.internal.address.unit.LCNLämpchenParentAddress;
 import org.openhab.binding.lcn_2.internal.definition.IMessage;
 import org.openhab.binding.lcn_2.internal.definition.ValueType;
+import org.openhab.binding.lcn_2.internal.helper.LCNLämpchenHandler;
 import org.openhab.binding.lcn_2.internal.message.BooleanMessage;
 
 /*----------------------------------------------------------------------------*/
@@ -33,40 +38,77 @@ public class LCNLämpchen2PCKCommand extends BaseAddress2PCKCommand<LCNLämpchenAd
         return false;
     }
 
+    public synchronized void updateStatus(final LCNLämpchenAddress unitAddress, final BooleanMessage message) {
+        final LCNLämpchenParentAddress parent = unitAddress.getParent();
+        if (!handlers.containsKey(parent)) {
+            handlers.put(parent, new LCNLämpchenHandler());
+        }
+        final LCNLämpchenHandler targetHandler = handlers.get(parent);
+        if (null != targetHandler) {
+            final boolean enable = message.getValue();
+            switch (unitAddress.getType()) {
+            case ON:
+                targetHandler.setCurrentOnState(enable);
+                break;
+            case FLICKER:
+                targetHandler.setCurrentFlickerState(enable);
+                break;
+            case BLINK:
+                targetHandler.setCurrentBlinkState(enable);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
     @Override
     protected String __createCommand(final LCNLämpchenAddress unitAddress, final IMessage message) {
         if (ValueType.BOOLEAN == message.getKey().getValueType() && message instanceof BooleanMessage) {
-            final boolean enable = ((BooleanMessage) message).getValue();
-            final String aktion;
-            if (enable) {
-                switch (unitAddress.getType()) {
-                case ON:
-                    aktion = "E";
-                    break;
-                case FLICKER:
-                    aktion = "F";
-                    break;
-                case BLINK:
-                    aktion = "B";
-                    break;
-                default:
-                    return null;
-                }
-            } else {
-                aktion = "A";
+            updateStatus(unitAddress, (BooleanMessage) message);
+            final String aktion = determineAction(unitAddress);
+            if (null != aktion) {
+                return createCommandStr(unitAddress, "LA" + translate3Digits(unitAddress.getParent().getUnitNr()), aktion);
             }
-
-            return createCommandStr(unitAddress, "LA" + translate3Digits(unitAddress.getParent().getUnitNr()), aktion);
-        } else {
-            return null;
         }
+        return null;
     }
 
     private LCNLämpchen2PCKCommand() {
         // due to singleton
     }
 
+    private synchronized String determineAction(final LCNLämpchenAddress unitAddress) {
+        final LCNLämpchenHandler targetHandler = handlers.get(unitAddress.getParent());
+        if (null == targetHandler) {
+            return null;
+        }
+
+        int actionCode = 0;
+        if (LCNLämpchenHandler.State.ON == targetHandler.getCurrentBlinkState())
+            actionCode = actionCode | 1;
+        if (LCNLämpchenHandler.State.ON == targetHandler.getCurrentFlickerState())
+            actionCode = actionCode | 2;
+        if (LCNLämpchenHandler.State.ON == targetHandler.getCurrentOnState())
+            actionCode = actionCode | 4;
+
+        switch (actionCode) {
+        case 4:
+            return "E";
+        case 2:
+            return "F";
+        case 1:
+            return "B";
+        case 0:
+            return "A";
+        default:
+            return null;
+        }
+    }
+
     private static final LCNLämpchen2PCKCommand instance = new LCNLämpchen2PCKCommand();
+
+    private final SortedMap<LCNLämpchenParentAddress, LCNLämpchenHandler> handlers = new TreeMap<LCNLämpchenParentAddress, LCNLämpchenHandler>();
 }
 
 /*----------------------------------------------------------------------------*/

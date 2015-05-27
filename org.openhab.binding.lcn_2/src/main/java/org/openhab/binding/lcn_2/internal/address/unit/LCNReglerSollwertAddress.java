@@ -16,9 +16,10 @@
 package org.openhab.binding.lcn_2.internal.address.unit;
 
 import org.openhab.binding.lcn_2.internal.address.BaseLCNTargetAddress;
-import org.openhab.binding.lcn_2.internal.binding.bridge.TempActuatorBridge;
+import org.openhab.binding.lcn_2.internal.binding.bridge.IntegerActuatorBridge;
 import org.openhab.binding.lcn_2.internal.definition.IAddress2PCKCommand;
 import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
+import org.openhab.binding.lcn_2.internal.helper.LCNValueConverter;
 import org.openhab.binding.lcn_2.internal.node._2pck.LCNReglerSollwert2PCKCommand;
 
 /*----------------------------------------------------------------------------*/
@@ -31,7 +32,7 @@ public class LCNReglerSollwertAddress extends BaseLCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return TempActuatorBridge.getInstance();
+        return IntegerActuatorBridge.getInstance(LCNValueConverter.Entity.CELSIUS); // temperature
     }
 
     @Override

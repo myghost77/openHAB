@@ -15,24 +15,29 @@
 
 package org.openhab.binding.lcn_2.internal.binding.bridge;
 
-import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.openhab.binding.lcn_2.internal.definition.ILCNUnitAddress;
 import org.openhab.binding.lcn_2.internal.definition.IMessage;
 import org.openhab.binding.lcn_2.internal.definition.MessageType;
 import org.openhab.binding.lcn_2.internal.definition.ValueType;
+import org.openhab.binding.lcn_2.internal.helper.LCNValueConverter;
 import org.openhab.binding.lcn_2.internal.message.NumberMessage;
 import org.openhab.binding.lcn_2.internal.message.key.MessageKeyImpl;
 import org.openhab.core.items.Item;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.types.Command;
-import org.openhab.core.types.State;
 
 /*----------------------------------------------------------------------------*/
 
-public class IntegerActuatorBridge implements IAddressBindingBridge {
+public class IntegerActuatorBridge extends IntegerSensorBridge {
 
-    public static IntegerActuatorBridge getInstance() {
-        return instance;
+    public static synchronized IntegerActuatorBridge getInstance(final LCNValueConverter.Entity entity) {
+        if (!instances.containsKey(entity)) {
+            instances.put(entity, new IntegerActuatorBridge(LCNValueConverter.get(entity)));
+        }
+        return instances.get(entity);
     }
 
     @Override
@@ -46,43 +51,25 @@ public class IntegerActuatorBridge implements IAddressBindingBridge {
     }
 
     @Override
-    public boolean checkAllowedState(final ILCNUnitAddress unitAddress, final Item item) {
-        for (final Class<? extends State> dataType : item.getAcceptedDataTypes()) {
-            if (dataType.equals(DecimalType.class)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isGroupAllowed() {
-        return false;
-    }
-
-    @Override
     public IMessage createMessage(final ILCNUnitAddress unitAddress, final Command command) {
         if (command instanceof DecimalType) {
-            return new NumberMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.INTEGER),
-                    ((DecimalType) command).intValue());
+            if (null != getValueConverter()) {
+                return new NumberMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.LCN_INTEGER), getValueConverter()
+                        .toLCN(((DecimalType) command).floatValue()));
+            } else {
+                return new NumberMessage(new MessageKeyImpl(MessageType.COMMAND, unitAddress, ValueType.LCN_INTEGER),
+                        ((DecimalType) command).intValue());
+            }
+        } else {
+            return null;
         }
-        return null;
     }
 
-    @Override
-    public State createState(final IMessage message, final Item item) {
-        if (MessageType.STATUS == message.getKey().getMessageType() && ValueType.INTEGER == message.getKey().getValueType()
-                && message instanceof NumberMessage) {
-            return new DecimalType(((NumberMessage) message).getValue().asInt());
-        }
-        return null;
+    protected IntegerActuatorBridge(final LCNValueConverter.IConverter valueConverter) {
+        super(valueConverter);
     }
 
-    private IntegerActuatorBridge() {
-        // due to singleton
-    }
-
-    private static final IntegerActuatorBridge instance = new IntegerActuatorBridge();
+    private static final Map<LCNValueConverter.Entity, IntegerActuatorBridge> instances = new HashMap<LCNValueConverter.Entity, IntegerActuatorBridge>();
 }
 
 /*----------------------------------------------------------------------------*/

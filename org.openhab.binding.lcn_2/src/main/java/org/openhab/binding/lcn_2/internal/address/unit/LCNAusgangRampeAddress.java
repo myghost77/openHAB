@@ -31,7 +31,7 @@ public class LCNAusgangRampeAddress extends BaseLCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return IntegerActuatorBridge.getInstance();
+        return IntegerActuatorBridge.getInstance(null);
     }
 
     @Override
