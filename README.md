@@ -34,12 +34,16 @@ Switch Light3 { lcn_2="module=207, unit=relais1" }
 
 #### Small light
 ```
-Switch LED1_O { lcn_2="module=52, unit=smallLight2, type=on"      }
-Switch LED1_B { lcn_2="module=52, unit=smallLight2, type=blink"   }
-Switch LED1_F { lcn_2="module=52, unit=smallLight2, type=flicker" }
+Switch LED1_Master_O { lcn_2="module=52, unit=smallLight2, type=on"      }
+Switch LED1_Master_B { lcn_2="module=52, unit=smallLight2, type=blink"   }
+Switch LED1_Master_F { lcn_2="module=52, unit=smallLight2, type=flicker" }
+
+Number LED1_status { lcn_2="module=52, unit=smallLight2" }
 ```
 
-The small light items can be used hierarchical! When LED1_O, LED1_B and LED1_F are set on, the small light flickers. If LED1_O and LED1_B are set to on only, the small light blinks. The small light is only set to on, if LED1_O is set to on. The small light is off, when all items are set to off.
+The small light items can be used hierarchical! When LED1_Master_O, LED1_Master_B and LED1_Master_F are set on, the small light flickers. If LED1_Master_O and LED1_Master_B are set to on only, the small light blinks. The small light is only set to on, if LED1_Master_O is set to on. The small light is off, when all items are set to off.
+
+LED1_status contains the current status of the small light: 0=OFF, 1=ON, 2=BLINK, 3=FLICKER.
 
 #### Sensor
 ```
@@ -94,7 +98,19 @@ Switch ButtonLock_Switch2 { lcn_2="module=203, unit=buttonLockC7" }
 ```
 
 ### Commands
-Commands are represented as a switch. An ON state send to that switch will execute the command. The state will automatically be reset to OFF when an acknowledgement is received from the LCN-bus. It doesn't matter if the acknowledgement is positive or negative.
+Commands are represented as a switch. An ON state send to that switch will execute the command.
+
+For all items a "resetType" can be defined as parameter. The following values are allowed:
+* "never": The state will never be reset to OFF.
+* "positiveAckn": The state will automatically be reset to OFF when a positive acknowledgement is received from the LCN-bus (DEFAULT).
+* "negativeAckn": The state will automatically be reset to OFF when a negative acknowledgement is received from the LCN-bus.
+* "anyAckn": The state will automatically be reset to OFF when any acknowledgement is received from the LCN-bus.
+* "always": The state will always be automatically reset to OFF.
+
+Example:
+```
+Switch Light1_RampStop { lcn_2="module=157, unit=outputRampStop1, resetType=always" }
+```
 
 #### Stop ramp for output
 ```

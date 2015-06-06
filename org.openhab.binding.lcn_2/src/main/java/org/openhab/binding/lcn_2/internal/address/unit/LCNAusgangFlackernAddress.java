@@ -110,7 +110,8 @@ public class LCNAusgangFlackernAddress implements ILCNUnitAddress {
         }
     }
 
-    public LCNAusgangFlackernAddress(final LCNAusgangFlackernParentAddress parent, final Type type, final Speed speed, final int count) {
+    public LCNAusgangFlackernAddress(final LCNAusgangFlackernParentAddress parent, final Type type, final Speed speed, final int count,
+            final Command2LCNBridge.CommandResetType resetType) {
         this.parent = parent;
         this.type = type;
         this.speed = speed;
@@ -121,6 +122,7 @@ public class LCNAusgangFlackernAddress implements ILCNUnitAddress {
         } else {
             this.count = count;
         }
+        this.resetType = resetType;
     }
 
     @Override
@@ -167,7 +169,7 @@ public class LCNAusgangFlackernAddress implements ILCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return Command2LCNBridge.getInstance();
+        return Command2LCNBridge.getInstance(resetType);
     }
 
     @Override
@@ -208,6 +210,8 @@ public class LCNAusgangFlackernAddress implements ILCNUnitAddress {
     private final Speed speed;
 
     private final int count;
+
+    private final Command2LCNBridge.CommandResetType resetType;
 }
 
 /*----------------------------------------------------------------------------*/

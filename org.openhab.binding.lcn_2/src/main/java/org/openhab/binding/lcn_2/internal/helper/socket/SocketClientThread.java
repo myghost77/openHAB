@@ -103,7 +103,11 @@ public class SocketClientThread extends Thread implements IHasAddress {
                     }
                 }
             } catch (final Exception e) {
-                // do nothing
+                try {
+                    Thread.sleep(millisToWaitAfterError);
+                } catch (final InterruptedException e2) {
+                    // do nothing here
+                }
             } finally {
                 try {
                     if (!clientSocket.isClosed()) {
@@ -142,6 +146,16 @@ public class SocketClientThread extends Thread implements IHasAddress {
             }
         } catch (final Exception e) {
             // do nothing
+        }
+    }
+
+    public synchronized void disconnect() {
+        if (null != clientSocket && !clientSocket.isClosed()) {
+            try {
+                clientSocket.close();
+            } catch (final IOException e) {
+                // do nothing
+            }
         }
     }
 

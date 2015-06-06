@@ -53,6 +53,7 @@ import org.openhab.binding.lcn_2.internal.address.unit.LCNSummeParentAddress;
 import org.openhab.binding.lcn_2.internal.address.unit.LCNTastensperreAddress;
 import org.openhab.binding.lcn_2.internal.address.unit.LCNTemperaturVariableAddress;
 import org.openhab.binding.lcn_2.internal.address.unit.LCNZählRechenVariableAddress;
+import org.openhab.binding.lcn_2.internal.binding.bridge.Command2LCNBridge;
 import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
 import org.openhab.binding.lcn_2.internal.definition.IEnum;
 import org.openhab.binding.lcn_2.internal.definition.ILCNUnitAddress;
@@ -295,12 +296,13 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         }
 
         // LCNAusgangRampeStoppAddress
-        for (final int unitNr : createUnitNumberArray(new LCNAusgangRampeStoppAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
+        for (final int unitNr : createUnitNumberArray(new LCNAusgangRampeStoppAddress(dummyTargetAddress, 0, defaultCommandResetType)
+                .getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
                 public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
-                        final Map<String, String> bindingConfigParts) {
-                    return new LCNAusgangRampeStoppAddress(targetAddress, unitNr);
+                        final Map<String, String> bindingConfigParts) throws BindingConfigParseException {
+                    return new LCNAusgangRampeStoppAddress(targetAddress, unitNr, getCommandResetType(item, bindingConfigParts));
                 }
             });
         }
@@ -357,12 +359,13 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         });
 
         // LCNReglerSollwertAddress
-        for (final int unitNr : createUnitNumberArray(new LCNReglerSollwertAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
+        for (final int unitNr : createUnitNumberArray(new LCNReglerSollwertAddress(dummyTargetAddress, 0, null).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
                 public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
-                        final Map<String, String> bindingConfigParts) {
-                    return new LCNReglerSollwertAddress(targetAddress, unitNr);
+                        final Map<String, String> bindingConfigParts) throws BindingConfigParseException {
+                    return new LCNReglerSollwertAddress(targetAddress, unitNr, getEntity(item, bindingConfigParts,
+                            LCNValueConverter.Entity.CELSIUS));
                 }
             });
         }
@@ -401,12 +404,14 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         // LCNSendeTasteAddress
         for (final LCNSendeTasteAddress.Type type : LCNSendeTasteAddress.Type.asList()) {
             for (final LCNSendeTasteAddress.Bank bank : LCNSendeTasteAddress.Bank.asList()) {
-                for (final int unitNr : createUnitNumberArray(new LCNSendeTasteAddress(dummyTargetAddress, 0, type, bank).getMaxNrOfUnits())) {
+                for (final int unitNr : createUnitNumberArray(new LCNSendeTasteAddress(dummyTargetAddress, 0, type, bank,
+                        defaultCommandResetType).getMaxNrOfUnits())) {
                     addToUnitAddressDict(new UnitAddressCreator() {
                         @Override
                         public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
-                                final Map<String, String> bindingConfigParts) {
-                            return new LCNSendeTasteAddress(targetAddress, unitNr, type, bank);
+                                final Map<String, String> bindingConfigParts) throws BindingConfigParseException {
+                            return new LCNSendeTasteAddress(targetAddress, unitNr, type, bank,
+                                    getCommandResetType(item, bindingConfigParts));
                         }
                     });
                 }
@@ -452,12 +457,13 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         }
 
         // LCNTemperaturVariableAddress
-        for (final int unitNr : createUnitNumberArray(new LCNTemperaturVariableAddress(dummyTargetAddress, 0).getMaxNrOfUnits())) {
+        for (final int unitNr : createUnitNumberArray(new LCNTemperaturVariableAddress(dummyTargetAddress, 0, null).getMaxNrOfUnits())) {
             addToUnitAddressDict(new UnitAddressCreator() {
                 @Override
                 public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
-                        final Map<String, String> bindingConfigParts) {
-                    return new LCNTemperaturVariableAddress(targetAddress, unitNr);
+                        final Map<String, String> bindingConfigParts) throws BindingConfigParseException {
+                    return new LCNTemperaturVariableAddress(targetAddress, unitNr, getEntity(item, bindingConfigParts,
+                            LCNValueConverter.Entity.CELSIUS));
                 }
             });
         }
@@ -467,22 +473,39 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
             @Override
             public ILCNUnitAddress create(final BaseLCNTargetAddress targetAddress, final Item item,
                     final Map<String, String> bindingConfigParts) throws BindingConfigParseException {
-                // recognize entity
-                final String entityStr = popValue(item, bindingConfigParts, "entity", "");
-                final LCNValueConverter.Entity entity;
-                if (!entityStr.isEmpty()) {
-                    entity = new CheckEnum<LCNValueConverter.Entity>(LCNValueConverter.Entity.asList()).get(entityStr);
-                    if (null == entity) {
-                        throw createParseException(item, "Entity not recognized: '" + entityStr + "'");
-                    }
-                } else {
-                    entity = null;
-                }
-
-                // return object
-                return new LCNZählRechenVariableAddress(targetAddress, entity);
+                return new LCNZählRechenVariableAddress(targetAddress, getEntity(item, bindingConfigParts, null));
             }
         });
+    }
+
+    private static Command2LCNBridge.CommandResetType getCommandResetType(final Item item, final Map<String, String> bindingConfigParts)
+            throws BindingConfigParseException {
+        final String resetTypeStr = popValue(item, bindingConfigParts, "resetType", "");
+        final Command2LCNBridge.CommandResetType resetType;
+        if (!resetTypeStr.isEmpty()) {
+            resetType = new CheckEnum<Command2LCNBridge.CommandResetType>(Command2LCNBridge.CommandResetType.asList()).get(resetTypeStr);
+            if (null == resetType) {
+                throw createParseException(item, "Command reset type not recognized: '" + resetTypeStr + "'");
+            }
+        } else {
+            resetType = defaultCommandResetType;
+        }
+        return resetType;
+    }
+
+    private static LCNValueConverter.Entity getEntity(final Item item, final Map<String, String> bindingConfigParts,
+            final LCNValueConverter.Entity defaultEntity) throws BindingConfigParseException {
+        final String entityStr = popValue(item, bindingConfigParts, "entity", "");
+        final LCNValueConverter.Entity entity;
+        if (!entityStr.isEmpty()) {
+            entity = new CheckEnum<LCNValueConverter.Entity>(LCNValueConverter.Entity.asList()).get(entityStr);
+            if (null == entity) {
+                throw createParseException(item, "Entity not recognized: '" + entityStr + "'");
+            }
+        } else {
+            entity = defaultEntity;
+        }
+        return entity;
     }
 
     private static LCNAusgangFlackernAddress createSpecial(final Item item, final LCNAusgangFlackernParentAddress parentAddress,
@@ -507,16 +530,21 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         final int count = popValue(item, bindingConfigParts, "count", null, 1, 15);
 
         // create object
-        return new LCNAusgangFlackernAddress(parentAddress, type, speed, count);
+        return new LCNAusgangFlackernAddress(parentAddress, type, speed, count, getCommandResetType(item, bindingConfigParts));
     }
 
     private static LCNLämpchenAddress createSpecial(final Item item, final LCNLämpchenParentAddress parentAddress,
             final Map<String, String> bindingConfigParts) throws BindingConfigParseException {
         // determine type
-        final String typeStr = popValue(item, bindingConfigParts, "type", LCNLämpchenAddress.Type.ON.asString());
-        final LCNLämpchenAddress.Type type = new CheckEnum<LCNLämpchenAddress.Type>(LCNLämpchenAddress.Type.asList()).get(typeStr);
-        if (null == type) {
-            throw createParseException(item, "Type not recognized: '" + typeStr + "'");
+        final LCNLämpchenAddress.Type type;
+        if (bindingConfigParts.containsKey("type")) {
+            final String typeStr = popValue(item, bindingConfigParts, "type", LCNLämpchenAddress.Type.ON.asString());
+            type = new CheckEnum<LCNLämpchenAddress.Type>(LCNLämpchenAddress.Type.asList()).get(typeStr);
+            if (null == type) {
+                throw createParseException(item, "Type not recognized: '" + typeStr + "'");
+            }
+        } else {
+            type = null;
         }
 
         // create object
@@ -537,7 +565,7 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         final int register = popValue(item, bindingConfigParts, "register", null, 0, 9);
 
         // create object
-        return new LCNLichtszeneAktionAddress(parentAddress, action, register);
+        return new LCNLichtszeneAktionAddress(parentAddress, action, register, getCommandResetType(item, bindingConfigParts));
     }
 
     private static LCNPieperAddress createSpecial(final Item item, final LCNPieperParentAddress parentAddress,
@@ -553,7 +581,7 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         final int beeps = popValue(item, bindingConfigParts, "beeps", null, 1, 15);
 
         // create object
-        return new LCNPieperAddress(parentAddress, mode, beeps);
+        return new LCNPieperAddress(parentAddress, mode, beeps, getCommandResetType(item, bindingConfigParts));
     }
 
     private static LCNReglersperreAddress createSpecial(final Item item, final LCNReglersperreParentAddress parentAddress,
@@ -602,7 +630,7 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         }
 
         // create object
-        return new LCNRelaisGroupAddress(parentAddress, relais);
+        return new LCNRelaisGroupAddress(parentAddress, relais, getCommandResetType(item, bindingConfigParts));
     }
 
     private static LCNSendeTasteVerzögertAddress createSpecial(final Item item, final LCNSendeTasteVerzögertParentAddress parentAddress,
@@ -636,7 +664,7 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
         final int delay = popValue(item, bindingConfigParts, "delay", null, 1, maxValue);
 
         // create object
-        return new LCNSendeTasteVerzögertAddress(parentAddress, entity, delay);
+        return new LCNSendeTasteVerzögertAddress(parentAddress, entity, delay, getCommandResetType(item, bindingConfigParts));
     }
 
     private static LCNSummeAddress createSpecial(final Item item, final LCNSummeParentAddress parentAddress,
@@ -745,6 +773,8 @@ public class LCNBindingProviderImpl extends AbstractGenericBindingProvider imple
     }
 
     private static final Logger logger = LoggerFactory.getLogger(LCNBindingProviderImpl.class);
+
+    private static final Command2LCNBridge.CommandResetType defaultCommandResetType = Command2LCNBridge.CommandResetType.POSITIVE_ACKN;
 
     private static final BaseLCNTargetAddress dummyTargetAddress = new LCNGroupAddress(0);
 

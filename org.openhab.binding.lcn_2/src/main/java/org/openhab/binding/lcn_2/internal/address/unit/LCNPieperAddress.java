@@ -66,7 +66,8 @@ public class LCNPieperAddress implements ILCNUnitAddress {
         }
     }
 
-    public LCNPieperAddress(final LCNPieperParentAddress parent, final Mode mode, final int beeps) {
+    public LCNPieperAddress(final LCNPieperParentAddress parent, final Mode mode, final int beeps,
+            final Command2LCNBridge.CommandResetType resetType) {
         this.parent = parent;
         this.mode = mode;
         if (beeps < 1) {
@@ -76,6 +77,7 @@ public class LCNPieperAddress implements ILCNUnitAddress {
         } else {
             this.beeps = beeps;
         }
+        this.resetType = resetType;
     }
 
     @Override
@@ -117,7 +119,7 @@ public class LCNPieperAddress implements ILCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return Command2LCNBridge.getInstance();
+        return Command2LCNBridge.getInstance(resetType);
     }
 
     @Override
@@ -152,6 +154,8 @@ public class LCNPieperAddress implements ILCNUnitAddress {
     private final Mode mode;
 
     private final int beeps;
+
+    private final Command2LCNBridge.CommandResetType resetType;
 }
 
 /*----------------------------------------------------------------------------*/

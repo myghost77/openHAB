@@ -39,36 +39,40 @@ public class LCNLämpchen2PCKCommand extends BaseAddress2PCKCommand<LCNLämpchenAd
     }
 
     public synchronized void updateStatus(final LCNLämpchenAddress unitAddress, final BooleanMessage message) {
-        final LCNLämpchenParentAddress parent = unitAddress.getParent();
-        if (!handlers.containsKey(parent)) {
-            handlers.put(parent, new LCNLämpchenHandler());
-        }
-        final LCNLämpchenHandler targetHandler = handlers.get(parent);
-        if (null != targetHandler) {
-            final boolean enable = message.getValue();
-            switch (unitAddress.getType()) {
-            case ON:
-                targetHandler.setCurrentOnState(enable);
-                break;
-            case FLICKER:
-                targetHandler.setCurrentFlickerState(enable);
-                break;
-            case BLINK:
-                targetHandler.setCurrentBlinkState(enable);
-                break;
-            default:
-                break;
+        if (unitAddress.isMaster()) {
+            final LCNLämpchenParentAddress parent = unitAddress.getParent();
+            if (!handlers.containsKey(parent)) {
+                handlers.put(parent, new LCNLämpchenHandler());
+            }
+            final LCNLämpchenHandler targetHandler = handlers.get(parent);
+            if (null != targetHandler) {
+                final boolean enable = message.getValue();
+                switch (unitAddress.getType()) {
+                case ON:
+                    targetHandler.setCurrentOnState(enable);
+                    break;
+                case FLICKER:
+                    targetHandler.setCurrentFlickerState(enable);
+                    break;
+                case BLINK:
+                    targetHandler.setCurrentBlinkState(enable);
+                    break;
+                default:
+                    break;
+                }
             }
         }
     }
 
     @Override
     protected String __createCommand(final LCNLämpchenAddress unitAddress, final IMessage message) {
-        if (ValueType.BOOLEAN == message.getKey().getValueType() && message instanceof BooleanMessage) {
-            updateStatus(unitAddress, (BooleanMessage) message);
-            final String aktion = determineAction(unitAddress);
-            if (null != aktion) {
-                return createCommandStr(unitAddress, "LA" + translate3Digits(unitAddress.getParent().getUnitNr()), aktion);
+        if (unitAddress.isMaster()) {
+            if (ValueType.BOOLEAN == message.getKey().getValueType() && message instanceof BooleanMessage) {
+                updateStatus(unitAddress, (BooleanMessage) message);
+                final String aktion = determineAction(unitAddress);
+                if (null != aktion) {
+                    return createCommandStr(unitAddress, "LA" + translate3Digits(unitAddress.getParent().getUnitNr()), aktion);
+                }
             }
         }
         return null;

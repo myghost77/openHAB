@@ -25,13 +25,15 @@ import org.openhab.binding.lcn_2.internal.node._2pck.LCNAusgangRampeStopp2PCKCom
 
 public class LCNAusgangRampeStoppAddress extends BaseLCNUnitAddress {
 
-    public LCNAusgangRampeStoppAddress(final BaseLCNTargetAddress targetAddress, final int unitNr) {
+    public LCNAusgangRampeStoppAddress(final BaseLCNTargetAddress targetAddress, final int unitNr,
+            final Command2LCNBridge.CommandResetType resetType) {
         super(targetAddress, unitNr);
+        this.resetType = resetType;
     }
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return Command2LCNBridge.getInstance();
+        return Command2LCNBridge.getInstance(resetType);
     }
 
     @Override
@@ -48,6 +50,8 @@ public class LCNAusgangRampeStoppAddress extends BaseLCNUnitAddress {
     public int getMaxNrOfUnits() {
         return LCNAusgangAddress.getMaxNrOfOutputs();
     }
+
+    private final Command2LCNBridge.CommandResetType resetType;
 }
 
 /*----------------------------------------------------------------------------*/

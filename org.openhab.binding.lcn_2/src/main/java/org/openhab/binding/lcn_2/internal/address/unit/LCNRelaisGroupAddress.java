@@ -66,7 +66,8 @@ public class LCNRelaisGroupAddress implements ILCNUnitAddress {
         }
     }
 
-    public LCNRelaisGroupAddress(final LCNRelaisGroupParentAddress parent, final SwitchType[] relais) {
+    public LCNRelaisGroupAddress(final LCNRelaisGroupParentAddress parent, final SwitchType[] relais,
+            final Command2LCNBridge.CommandResetType resetType) {
         this.parent = parent;
         this.relais = new SwitchType[LCNRelaisAddress.getMaxNrOfRelais()];
 
@@ -77,6 +78,8 @@ public class LCNRelaisGroupAddress implements ILCNUnitAddress {
                 this.relais[i] = null;
             }
         }
+
+        this.resetType = resetType;
     }
 
     @Override
@@ -145,7 +148,7 @@ public class LCNRelaisGroupAddress implements ILCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return Command2LCNBridge.getInstance();
+        return Command2LCNBridge.getInstance(resetType);
     }
 
     @Override
@@ -174,6 +177,8 @@ public class LCNRelaisGroupAddress implements ILCNUnitAddress {
     private final LCNRelaisGroupParentAddress parent;
 
     private final SwitchType[] relais;
+
+    private final Command2LCNBridge.CommandResetType resetType;
 }
 
 /*----------------------------------------------------------------------------*/

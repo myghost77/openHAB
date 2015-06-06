@@ -31,6 +31,8 @@ public interface IAddressBindingBridge {
 
     IMessage createMessage(ILCNUnitAddress unitAddress, Command command);
 
+    State createShadowState(ILCNUnitAddress unitAddress, Command command);
+
     State createState(IMessage message, Item item);
 }
 

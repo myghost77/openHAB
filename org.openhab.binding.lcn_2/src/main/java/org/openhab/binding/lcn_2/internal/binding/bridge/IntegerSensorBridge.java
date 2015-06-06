@@ -67,6 +67,11 @@ public class IntegerSensorBridge implements IAddressBindingBridge {
     }
 
     @Override
+    public State createShadowState(final ILCNUnitAddress unitAddress, final Command command) {
+        return null;
+    }
+
+    @Override
     public State createState(final IMessage message, final Item item) {
         if (MessageType.STATUS == message.getKey().getMessageType() && ValueType.LCN_INTEGER == message.getKey().getValueType()
                 && message instanceof NumberMessage) {

@@ -113,6 +113,8 @@ public class PCHKCommunicator implements INode, IReceivedDataNotifier, IHasAddre
                     } else if (receivedText.equals(passwordRequest)) {
                         final String password = LCNConfiguration.getInstance().getPCHKPassword() + endOfCommandCharacter;
                         socketClientThread.send(password.toCharArray(), password.length());
+                    } else if (receivedText.equals(authentificationErrorStr) || receivedText.equals(licenseErrorStr)) {
+                        socketClientThread.disconnect();
                     } else {
                         system.send(Priority.HIGH, new TextMessage(new MessageKeyImpl(MessageType.STATUS, sourceAddress, ValueType.TEXT),
                                 receivedText));
@@ -187,6 +189,10 @@ public class PCHKCommunicator implements INode, IReceivedDataNotifier, IHasAddre
     private static final String userNameRequest = "Username:";
 
     private static final String passwordRequest = "Password:";
+
+    private static final String authentificationErrorStr = "Authentification failed.";
+
+    private static final String licenseErrorStr = "$err:(license?)";
 
     private final SenderThread senderThread = new SenderThread();
 

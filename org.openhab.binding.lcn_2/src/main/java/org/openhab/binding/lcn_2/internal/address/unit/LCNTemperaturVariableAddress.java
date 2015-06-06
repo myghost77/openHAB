@@ -29,13 +29,14 @@ public class LCNTemperaturVariableAddress extends BaseLCNUnitAddress {
         return 2;
     }
 
-    public LCNTemperaturVariableAddress(final BaseLCNTargetAddress targetAddress, final int unitNr) {
+    public LCNTemperaturVariableAddress(final BaseLCNTargetAddress targetAddress, final int unitNr, final LCNValueConverter.Entity entity) {
         super(targetAddress, unitNr);
+        this.entity = entity;
     }
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return IntegerSensorBridge.getInstance(LCNValueConverter.Entity.CELSIUS); // temperature
+        return IntegerSensorBridge.getInstance(entity);
     }
 
     @Override
@@ -52,6 +53,8 @@ public class LCNTemperaturVariableAddress extends BaseLCNUnitAddress {
     public int getMaxNrOfUnits() {
         return getMaxNrOfTempVars();
     }
+
+    private final LCNValueConverter.Entity entity;
 }
 
 /*----------------------------------------------------------------------------*/

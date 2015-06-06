@@ -116,6 +116,11 @@ public class LCNBinding extends AbstractBinding<ILCNBindingProvider> implements 
                                 // forward message to internal event bus of binding
                                 lcnPublisher.send(engine.getSystem(), message);
                             }
+
+                            final State state = bindingBridge.createShadowState(unitAddress, command);
+                            if (null != state) {
+                                eventPublisher.postUpdate(itemName, state);
+                            }
                         } catch (final Exception e) {
                             logger.error("Could not send command: " + itemName + ":" + command.toString());
                             logger.error(getMessage(e));

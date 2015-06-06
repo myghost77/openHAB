@@ -62,10 +62,12 @@ public class LCNLichtszeneAktionAddress implements ILCNUnitAddress {
         }
     }
 
-    public LCNLichtszeneAktionAddress(final LCNLichtszeneAktionParentAddress parent, final Action action, final int register) {
+    public LCNLichtszeneAktionAddress(final LCNLichtszeneAktionParentAddress parent, final Action action, final int register,
+            final Command2LCNBridge.CommandResetType resetType) {
         this.parent = parent;
         this.action = action;
         this.register = register;
+        this.resetType = resetType;
     }
 
     @Override
@@ -107,7 +109,7 @@ public class LCNLichtszeneAktionAddress implements ILCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return Command2LCNBridge.getInstance();
+        return Command2LCNBridge.getInstance(resetType);
     }
 
     @Override
@@ -142,6 +144,8 @@ public class LCNLichtszeneAktionAddress implements ILCNUnitAddress {
     private final Action action;
 
     private final int register;
+
+    private final Command2LCNBridge.CommandResetType resetType;
 }
 
 /*----------------------------------------------------------------------------*/

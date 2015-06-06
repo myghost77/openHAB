@@ -107,11 +107,13 @@ public class LCNSendeTasteAddress extends BaseLCNUnitAddress {
         }
     }
 
-    public LCNSendeTasteAddress(final BaseLCNTargetAddress targetAddress, final int unitNr, final Type type, final Bank bank) {
+    public LCNSendeTasteAddress(final BaseLCNTargetAddress targetAddress, final int unitNr, final Type type, final Bank bank,
+            final Command2LCNBridge.CommandResetType resetType) {
         super(targetAddress, unitNr);
 
         this.type = type;
         this.bank = bank;
+        this.resetType = resetType;
     }
 
     @Override
@@ -138,7 +140,7 @@ public class LCNSendeTasteAddress extends BaseLCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return Command2LCNBridge.getInstance();
+        return Command2LCNBridge.getInstance(resetType);
     }
 
     @Override
@@ -172,6 +174,8 @@ public class LCNSendeTasteAddress extends BaseLCNUnitAddress {
     private final Type type;
 
     private final Bank bank;
+
+    private final Command2LCNBridge.CommandResetType resetType;
 }
 
 /*----------------------------------------------------------------------------*/

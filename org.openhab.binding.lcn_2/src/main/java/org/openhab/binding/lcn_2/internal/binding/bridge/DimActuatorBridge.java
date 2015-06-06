@@ -90,6 +90,11 @@ public class DimActuatorBridge implements IAddressBindingBridge {
     }
 
     @Override
+    public State createShadowState(final ILCNUnitAddress unitAddress, final Command command) {
+        return null;
+    }
+
+    @Override
     public State createState(final IMessage message, final Item item) {
         if (MessageType.STATUS == message.getKey().getMessageType() && ValueType.PERCENT == message.getKey().getValueType()
                 && message instanceof NumberMessage) {

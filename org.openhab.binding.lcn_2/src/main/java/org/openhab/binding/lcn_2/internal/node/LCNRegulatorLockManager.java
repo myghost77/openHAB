@@ -58,7 +58,7 @@ public class LCNRegulatorLockManager implements INode {
         if (address instanceof LCNReglersperreAddress) {
             final LCNReglersperreAddress value = (LCNReglersperreAddress) address;
             final LCNReglerSollwertAddress key = new LCNReglerSollwertAddress(value.getParent().getTargetAddress(), value.getParent()
-                    .getUnitNr());
+                    .getUnitNr(), null);
             regulatorLocks.put(key, value);
         } else if (address instanceof LCNReglerSollwertAddress) { // change of "Regler Sollwert" => unlock regulator
             final LCNReglerSollwertAddress key = (LCNReglerSollwertAddress) address;

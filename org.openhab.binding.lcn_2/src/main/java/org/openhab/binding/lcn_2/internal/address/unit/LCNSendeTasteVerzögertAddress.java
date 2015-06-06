@@ -70,10 +70,12 @@ public class LCNSendeTasteVerzögertAddress implements ILCNUnitAddress {
         }
     }
 
-    public LCNSendeTasteVerzögertAddress(final LCNSendeTasteVerzögertParentAddress parent, final Entity entity, final int delay) {
+    public LCNSendeTasteVerzögertAddress(final LCNSendeTasteVerzögertParentAddress parent, final Entity entity, final int delay,
+            final Command2LCNBridge.CommandResetType resetType) {
         this.parent = parent;
         this.entity = entity;
         this.delay = delay;
+        this.resetType = resetType;
     }
 
     @Override
@@ -115,7 +117,7 @@ public class LCNSendeTasteVerzögertAddress implements ILCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return Command2LCNBridge.getInstance();
+        return Command2LCNBridge.getInstance(resetType);
     }
 
     @Override
@@ -150,6 +152,8 @@ public class LCNSendeTasteVerzögertAddress implements ILCNUnitAddress {
     private final Entity entity;
 
     private final int delay;
+
+    private final Command2LCNBridge.CommandResetType resetType;
 }
 
 /*----------------------------------------------------------------------------*/

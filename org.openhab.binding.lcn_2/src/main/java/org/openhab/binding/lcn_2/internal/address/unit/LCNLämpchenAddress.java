@@ -16,7 +16,8 @@
 package org.openhab.binding.lcn_2.internal.address.unit;
 
 import org.openhab.binding.lcn_2.internal.address.BaseLCNTargetAddress;
-import org.openhab.binding.lcn_2.internal.binding.bridge.BooleanActuatorBridge;
+import org.openhab.binding.lcn_2.internal.binding.bridge.BooleanVirtualActuatorBridge;
+import org.openhab.binding.lcn_2.internal.binding.bridge.IntegerSensorBridge;
 import org.openhab.binding.lcn_2.internal.definition.IAddress;
 import org.openhab.binding.lcn_2.internal.definition.IAddress2PCKCommand;
 import org.openhab.binding.lcn_2.internal.definition.IAddressBindingBridge;
@@ -86,7 +87,11 @@ public class LCNLämpchenAddress implements ILCNUnitAddress {
 
     @Override
     public String getName() {
-        return parent.getName() + ":" + type.asString();
+        if (null != type) {
+            return parent.getName() + ":" + type.asString();
+        } else {
+            return parent.getName();
+        }
     }
 
     @Override
@@ -101,10 +106,17 @@ public class LCNLämpchenAddress implements ILCNUnitAddress {
             } else {
                 final LCNLämpchenAddress other2 = (LCNLämpchenAddress) other;
 
-                if (type.asNumber() < other2.type.asNumber())
-                    return -1;
-                if (type.asNumber() > other2.type.asNumber())
-                    return +1;
+                if (null != type && null != other2.type) {
+                    if (type.asNumber() < other2.type.asNumber())
+                        return -1;
+                    if (type.asNumber() > other2.type.asNumber())
+                        return +1;
+                } else {
+                    if (null != type && null == other2.type)
+                        return -1;
+                    if (null == type && null != other2.type)
+                        return +1;
+                }
 
                 return 0;
             }
@@ -113,12 +125,20 @@ public class LCNLämpchenAddress implements ILCNUnitAddress {
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return BooleanActuatorBridge.getInstance();
+        if (isMaster()) {
+            return BooleanVirtualActuatorBridge.getInstance();
+        } else {
+            return IntegerSensorBridge.getInstance(null);
+        }
     }
 
     @Override
     public IAddress2PCKCommand getPCKTranslator() {
-        return LCNLämpchen2PCKCommand.getInstance();
+        if (isMaster()) {
+            return LCNLämpchen2PCKCommand.getInstance();
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -151,13 +171,17 @@ public class LCNLämpchenAddress implements ILCNUnitAddress {
         return type;
     }
 
+    public boolean isMaster() {
+        return null != type;
+    }
+
     public boolean isShadow() {
         return shadow;
     }
 
     private final LCNLämpchenParentAddress parent;
 
-    private final Type type;
+    private final Type type; // could be 'null'
 
     private final boolean shadow;
 }

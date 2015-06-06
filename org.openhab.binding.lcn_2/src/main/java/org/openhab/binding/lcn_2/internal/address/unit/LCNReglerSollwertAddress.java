@@ -26,13 +26,14 @@ import org.openhab.binding.lcn_2.internal.node._2pck.LCNReglerSollwert2PCKComman
 
 public class LCNReglerSollwertAddress extends BaseLCNUnitAddress {
 
-    public LCNReglerSollwertAddress(final BaseLCNTargetAddress targetAddress, final int unitNr) {
+    public LCNReglerSollwertAddress(final BaseLCNTargetAddress targetAddress, final int unitNr, final LCNValueConverter.Entity entity) {
         super(targetAddress, unitNr);
+        this.entity = entity;
     }
 
     @Override
     public IAddressBindingBridge getBindingBridge() {
-        return IntegerActuatorBridge.getInstance(LCNValueConverter.Entity.CELSIUS); // temperature
+        return IntegerActuatorBridge.getInstance(entity);
     }
 
     @Override
@@ -49,6 +50,8 @@ public class LCNReglerSollwertAddress extends BaseLCNUnitAddress {
     public int getMaxNrOfUnits() {
         return LCNTemperaturVariableAddress.getMaxNrOfTempVars();
     }
+
+    private final LCNValueConverter.Entity entity;
 }
 
 /*----------------------------------------------------------------------------*/

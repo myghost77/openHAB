@@ -31,7 +31,6 @@ import org.openhab.binding.lcn_2.internal.definition.ISystem;
 import org.openhab.binding.lcn_2.internal.definition.MessageType;
 import org.openhab.binding.lcn_2.internal.definition.Priority;
 import org.openhab.binding.lcn_2.internal.definition.ValueType;
-import org.openhab.binding.lcn_2.internal.helper.LCNLämpchenHandler;
 import org.openhab.binding.lcn_2.internal.message.BooleanMessage;
 import org.openhab.binding.lcn_2.internal.message.MeasurementMessage;
 import org.openhab.binding.lcn_2.internal.message.NumberMessage;
@@ -208,59 +207,29 @@ public class PCKStatusTranslator implements INode {
     private void sendSmallLightStatus(final ISystem system, final LCNModuleAddress moduleAddress, final int unitNr,
             final LCNLämpchenAddress.Type type) throws InterruptedException {
         final LCNLämpchenParentAddress parent = new LCNLämpchenParentAddress(moduleAddress, unitNr);
-        final IAddress addressBlink = new LCNLämpchenAddress(parent, LCNLämpchenAddress.Type.BLINK);
-        final IAddress addressFlicker = new LCNLämpchenAddress(parent, LCNLämpchenAddress.Type.FLICKER);
-        final IAddress addressOn = new LCNLämpchenAddress(parent, LCNLämpchenAddress.Type.ON);
+        final IAddress unitAddress = new LCNLämpchenAddress(parent, null);
 
-        final LCNLämpchenHandler handler = new LCNLämpchenHandler();
+        final int value;
         if (null != type) {
             switch (type) {
+            case ON:
+                value = 1;
+                break;
             case BLINK:
-                handler.setCurrentBlinkState(true);
+                value = 2;
                 break;
             case FLICKER:
-                handler.setCurrentFlickerState(true);
+                value = 3;
                 break;
-            case ON:
-                handler.setCurrentOnState(true);
+            default:
+                value = 9;
                 break;
             }
         } else {
-            handler.setCurrentBlinkState(false);
-            handler.setCurrentFlickerState(false);
-            handler.setCurrentOnState(false);
+            value = 0;
         }
 
-        switch (handler.getCurrentBlinkState()) {
-        case ON:
-            sendBoolean(system, addressBlink, true, ValueType.BOOLEAN);
-            break;
-        case OFF:
-            sendBoolean(system, addressBlink, false, ValueType.BOOLEAN);
-            break;
-        default:
-            break;
-        }
-        switch (handler.getCurrentFlickerState()) {
-        case ON:
-            sendBoolean(system, addressFlicker, true, ValueType.BOOLEAN);
-            break;
-        case OFF:
-            sendBoolean(system, addressFlicker, false, ValueType.BOOLEAN);
-            break;
-        default:
-            break;
-        }
-        switch (handler.getCurrentOnState()) {
-        case ON:
-            sendBoolean(system, addressOn, true, ValueType.BOOLEAN);
-            break;
-        case OFF:
-            sendBoolean(system, addressOn, false, ValueType.BOOLEAN);
-            break;
-        default:
-            break;
-        }
+        sendNumber(system, unitAddress, value, ValueType.LCN_INTEGER);
     }
 
     private void sendSumStatus(final ISystem system, final LCNModuleAddress moduleAddress, final int unitNr,
